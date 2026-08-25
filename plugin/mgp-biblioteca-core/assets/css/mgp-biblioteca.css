@@ -1,0 +1,10 @@
+/**
+ * Ajustes MÍNIMOS de CSS. El diseño visual real vive en Elementor
+ * (clases g-mgp-*) — este archivo solo cubre estados que Elementor no
+ * puede expresar (ej. resultado vacío del buscador).
+ */
+.g-mgp-empty {
+	opacity: 0.7;
+	font-style: italic;
+	padding: 24px 0;
+}

@@ -173,3 +173,25 @@ gestionar libros sin necesitar cuenta de Administrador completo.
    el servidor `biblioteca.mgp.edu.pe` en vez de asumir — el sitio pudo
    cambiar desde la última visita.
 4. Revisar la sección §6 (pendientes) antes de proponer trabajo nuevo.
+
+## 9. Verificación en vivo (25/08/2026)
+
+Se confirmó vía Novamira (`wp plugin list`) el estado real del sitio:
+- **Activos:** 3d-flipbook-dflip-lite (DearFlip Lite), advanced-custom-fields
+  (ACF — instalado por el instituto, el plugin propio NO lo usa, usa meta
+  fields nativos), filebird, members, updraftplus, elementor,
+  header-footer-elementor, novamira.
+- **Falta instalar:** Wordfence (pendiente).
+- **Falta instalar:** `mgp-biblioteca-core` (el plugin propio) — sigue
+  solo en este repo local, no desplegado aún al sitio real. Ver §7 para
+  el procedimiento de despliegue.
+
+### Confirmación de arquitectura modular
+Se le explicó al usuario (y queda registrado aquí) el límite real de cada
+módulo: los módulos se comunican solo vía hooks de WP y los helpers
+`MGP_Cache`/`MGP_Seguridad`, nunca llamando funciones internas de otro
+módulo directamente. Único acoplamiento fuerte y consciente: la plantilla
+`includes/catalogo/template-tarjeta-libro.php` depende de las clases CSS
+exactas del diseño Elementor — si el diseño visual cambia, ese es el único
+archivo a tocar, aislado a propósito del resto de la lógica de datos.
+

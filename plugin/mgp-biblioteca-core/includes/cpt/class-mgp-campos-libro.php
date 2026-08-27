@@ -25,6 +25,7 @@ class MGP_Campos_Libro {
 	public function registrar_hooks(): void {
 		add_action( 'add_meta_boxes', array( $this, 'agregar_meta_box' ) );
 		add_action( 'save_post_libro', array( $this, 'guardar' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'encolar_selector_medios' ) );
 	}
 
 	public function agregar_meta_box(): void {
@@ -35,6 +36,29 @@ class MGP_Campos_Libro {
 			'libro',
 			'normal',
 			'high'
+		);
+	}
+
+	/**
+	 * Carga el selector visual de medios (wp.media) SOLO en la pantalla de
+	 * editar/crear un libro — nunca en el resto del admin, para no gastar
+	 * memoria/JS de más en un hosting de 1GB.
+	 */
+	public function encolar_selector_medios( string $hook ): void {
+		if ( ! in_array( $hook, array( 'post.php', 'post-new.php' ), true ) ) {
+			return;
+		}
+		if ( 'libro' !== get_post_type() ) {
+			return;
+		}
+
+		wp_enqueue_media();
+		wp_enqueue_script(
+			'mgp-admin-medios',
+			MGP_BIB_URL . 'assets/js/mgp-admin-medios.js',
+			array(), // Vanilla JS, sin dependencia de jQuery.
+			MGP_BIB_VERSION,
+			true
 		);
 	}
 
@@ -53,13 +77,25 @@ class MGP_Campos_Libro {
 				value="<?php echo esc_attr( $autor ); ?>">
 		</p>
 		<p>
-			<label for="mgp_archivo_pdf_id"><strong><?php esc_html_e( 'Archivo PDF (ID de adjunto)', 'mgp-biblioteca' ); ?></strong></label><br>
-			<input type="number" id="mgp_archivo_pdf_id" name="mgp_archivo_pdf_id" class="widefat"
-				value="<?php echo esc_attr( $archivo_pdf_id ); ?>"
-				min="0" step="1">
-			<span class="description">
-				<?php esc_html_e( 'Súbelo en Medios y coloca aquí su ID. (Próxima versión: selector visual de medios.)', 'mgp-biblioteca' ); ?>
-			</span>
+			<label><strong><?php esc_html_e( 'Archivo PDF', 'mgp-biblioteca' ); ?></strong></label><br>
+			<input type="hidden" id="mgp_archivo_pdf_id" name="mgp_archivo_pdf_id"
+				value="<?php echo esc_attr( $archivo_pdf_id ); ?>">
+			<div id="mgp_pdf_preview" style="margin: 6px 0;">
+				<?php if ( $archivo_pdf_id ) : ?>
+					<?php $nombre_archivo = basename( get_attached_file( (int) $archivo_pdf_id ) ); ?>
+					<span class="dashicons dashicons-media-document" style="color:#2271b1;"></span>
+					<?php echo esc_html( $nombre_archivo ?: __( 'Archivo seleccionado', 'mgp-biblioteca' ) ); ?>
+				<?php else : ?>
+					<em><?php esc_html_e( 'Ningún archivo seleccionado.', 'mgp-biblioteca' ); ?></em>
+				<?php endif; ?>
+			</div>
+			<button type="button" class="button" id="mgp_seleccionar_pdf">
+				<?php esc_html_e( 'Seleccionar PDF', 'mgp-biblioteca' ); ?>
+			</button>
+			<button type="button" class="button-link-delete" id="mgp_quitar_pdf"
+				style="margin-left: 8px; <?php echo $archivo_pdf_id ? '' : 'display:none;'; ?>">
+				<?php esc_html_e( 'Quitar', 'mgp-biblioteca' ); ?>
+			</button>
 		</p>
 		<p>
 			<label>
@@ -96,7 +132,16 @@ class MGP_Campos_Libro {
 		}
 
 		if ( isset( $_POST['mgp_archivo_pdf_id'] ) ) {
-			update_post_meta( $post_id, '_mgp_archivo_pdf_id', absint( $_POST['mgp_archivo_pdf_id'] ) );
+			$archivo_id = absint( $_POST['mgp_archivo_pdf_id'] );
+			// Verificación de seguridad: el selector de medios ya filtra por
+			// PDF en el navegador, pero eso es cosmético — un POST manual
+			// podría mandar cualquier ID. Se revalida aquí el tipo MIME real
+			// del adjunto antes de guardar, para que el lector (MGP_Lector)
+			// nunca sirva un archivo que no sea un PDF.
+			if ( $archivo_id > 0 && 'application/pdf' !== get_post_mime_type( $archivo_id ) ) {
+				$archivo_id = 0;
+			}
+			update_post_meta( $post_id, '_mgp_archivo_pdf_id', $archivo_id );
 		}
 
 		update_post_meta( $post_id, '_mgp_acceso_publico', isset( $_POST['mgp_acceso_publico'] ) ? '1' : '0' );

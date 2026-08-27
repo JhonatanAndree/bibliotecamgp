@@ -134,10 +134,8 @@ gestionar libros sin necesitar cuenta de Administrador completo.
 - [ ] Confirmar con Biblioteca/Coordinación académica la lista COMPLETA
       de carreras técnicas (categorías) — el diseño solo muestra 3.
 - [ ] Subir portadas reales de los libros (hoy "portada pendiente").
-- [ ] Mejorar el campo "Archivo PDF" del meta box: hoy pide el ID de
-      adjunto a mano — falta un selector visual de medios (wp.media).
-- [ ] Instalar en el sitio real: DearFlip Lite, Members, UpdraftPlus,
-      Wordfence, FileBird (ninguno instalado todavía, ver §3 de discover-abilities).
+- [x] Mejorar el campo "Archivo PDF" del meta box con selector visual
+      (wp.media) — hecho en v0.2.0 (27/08/2026), ver §11.
 - [ ] Crear la plantilla single-libro (página individual de cada libro)
       que incluya el shortcode/markup de DearFlip apuntando a `/leer/{id}/`.
 - [ ] Conectar los chips de categoría del diseño real (Catálogo) con
@@ -231,4 +229,41 @@ de `mgp_bib_activar()` antes del `flush_rewrite_rules()` final — no basta
 con que el hook `init` normal la registre, porque en el propio momento de
 activación ese hook ya pasó. Esto quedó documentado también como lección
 reusable en el skill de Novamira `desarrollo-plugin-modular-wordpress`.
+
+## 11. Decisión de almacenamiento y selector de PDF (27/08/2026)
+
+**Decisión: NO se usa Amazon S3.** Se evaluó (costo ~$0.023/GB/mes en S3,
+free tier actual de AWS es solo $200 en créditos por 6 meses desde julio
+2025, ya no es "gratis indefinido" como antes). El usuario confirmó:
+hosting propio tiene **50GB de espacio** y el catálogo tendrá **máximo
+200 libros PDF**. Con ese tope, incluso a 50MB por PDF (generoso para un
+libro técnico) son solo 10GB — muy por debajo del límite. **Todos los
+PDFs se guardan en la Media Library de WordPress, en el hosting mismo,
+sin servicios externos.** No reevaluar esto salvo que el catálogo crezca
+mucho más allá de 200 libros o el hosting cambie de plan.
+
+**v0.2.0 — Selector visual de PDF**: antes de empezar la carga de los 200
+libros (uno por uno, vía el admin de WordPress, decisión confirmada por
+el usuario — no se hizo importador CSV), se mejoró el meta box "Detalles
+del libro" para que el campo PDF use el selector nativo de medios de
+WordPress (`wp.media`) en vez de pedir el ID de adjunto a mano. Cambios:
+- `includes/cpt/class-mgp-campos-libro.php`: nuevo método
+  `encolar_selector_medios()` (carga `wp_enqueue_media()` + el script
+  SOLO en la pantalla de editar/crear un libro, nunca en el resto del
+  admin — 1GB RAM). El campo numérico visible se volvió `<input
+  type="hidden">` con botones "Seleccionar PDF"/"Quitar" y una vista
+  previa con el nombre del archivo.
+- Nuevo archivo `assets/js/mgp-admin-medios.js`: vanilla JS, abre
+  `wp.media` filtrado a `application/pdf`, reutiliza el mismo frame en
+  clics repetidos (evita fugas de memoria).
+- Seguridad: `guardar()` ahora revalida en el servidor que el adjunto
+  cuyo ID llega por POST sea realmente `application/pdf`
+  (`get_post_mime_type()`) antes de guardarlo — el filtro del navegador
+  es cosmético, esta es la verificación real.
+- Versión del plugin subida a **0.2.0** (constante `MGP_BIB_VERSION`) para
+  forzar cache-bust del JS en los navegadores. Aplicado en repo local y en
+  el sitio real (vía `novamira/execute-php` para el PHP,
+  `novamira/write-file` para el JS — `write-file`/`edit-file` de Novamira
+  NO permiten escribir `.php` fuera de `wp-content/novamira-sandbox/`, por
+  eso el PHP se escribe con `execute-php` + `file_put_contents`).
 

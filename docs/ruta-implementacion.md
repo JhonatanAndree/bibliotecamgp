@@ -1,6 +1,8 @@
 # Ruta de implementación — Biblioteca Virtual MGP
 
-Estado: **en desarrollo, plugin no instalado aún en el sitio en vivo.**
+Estado: **plugin propio y todos los plugins complementarios instalados y
+activos en el sitio en vivo (27/08/2026).** Bug de la ruta del lector
+detectado y corregido — ver MEMORIA.md §10.
 
 ## Fase 0 — Hecho
 - Sitio Elementor diseñado y publicado en biblioteca.mgp.edu.pe (fuera de
@@ -17,9 +19,11 @@ Estado: **en desarrollo, plugin no instalado aún en el sitio en vivo.**
 - [x] Guardado y progreso de lectura por usuario.
 - [x] Rol `bibliotecario`.
 
-## Fase 2 — Conexión con el sitio real (siguiente paso)
-- [ ] Subir `mgp-biblioteca-core` al sitio (ver MEMORIA.md §7) y activar.
-- [ ] Instalar DearFlip Lite, Members, UpdraftPlus, Wordfence, FileBird.
+## Fase 2 — Conexión con el sitio real
+- [x] Subir `mgp-biblioteca-core` al sitio (ver MEMORIA.md §7) y activar.
+- [x] Instalar DearFlip Lite, Members, UpdraftPlus, Wordfence, FileBird.
+- [x] Corregir bug del hook de activación (regla `/leer/{id}/` no se
+      registraba antes del flush) — ver MEMORIA.md §10.
 - [ ] Crear plantilla single-libro con DearFlip apuntando a `/leer/{id}/`.
 - [ ] Conectar los chips de categoría y el buscador del diseño real con
       los atributos `data-mgp-categoria` que espera `mgp-catalogo.js`.

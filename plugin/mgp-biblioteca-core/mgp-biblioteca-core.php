@@ -59,8 +59,15 @@ add_action( 'plugins_loaded', 'mgp_bib_bootstrap' );
 function mgp_bib_activar() {
 	require_once MGP_BIB_PATH . 'includes/cpt/class-mgp-cpt-libro.php';
 	require_once MGP_BIB_PATH . 'includes/cpt/class-mgp-tax-categoria.php';
+	require_once MGP_BIB_PATH . 'includes/lector/class-mgp-lector.php';
 	( new MGP_CPT_Libro() )->registrar();
 	( new MGP_Tax_Categoria() )->registrar();
+	// IMPORTANTE: la regla de reescritura '/leer/{id}/' (lector de PDF) debe
+	// quedar registrada ANTES del flush_rewrite_rules() de abajo. Si no,
+	// WordPress guarda el set de reglas SIN la nuestra y la ruta da 404 hasta
+	// el próximo flush manual. Bug real detectado y corregido el 27/08/2026
+	// tras verificación en vivo — ver MEMORIA.md.
+	( new MGP_Lector() )->registrar_ruta();
 	MGP_Loader::crear_rol_bibliotecario();
 	flush_rewrite_rules();
 }

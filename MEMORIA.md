@@ -74,8 +74,9 @@ Computación e informática, Contabilidad, Mecánica de producción.
 ## 4. Plugin `mgp-biblioteca-core` — qué existe hoy (v0.1.0)
 
 Ubicación en este repo: `plugin/mgp-biblioteca-core/`.
-**Todavía NO está instalado en el sitio en vivo** — está desarrollado
-localmente, pendiente de subir (ver §7 "Cómo desplegar").
+**Ya está instalado y activo en el sitio en vivo** desde el 27/08/2026
+(ver §10). Mantener el repo local y el sitio sincronizados: todo cambio
+de código debe aplicarse en ambos lados (ver §7 "Cómo desplegar").
 
 Arquitectura (un archivo = una responsabilidad):
 - `mgp-biblioteca-core.php` — bootstrap, constantes, activación/desactivación.
@@ -181,10 +182,9 @@ Se confirmó vía Novamira (`wp plugin list`) el estado real del sitio:
   (ACF — instalado por el instituto, el plugin propio NO lo usa, usa meta
   fields nativos), filebird, members, updraftplus, elementor,
   header-footer-elementor, novamira.
-- **Falta instalar:** Wordfence (pendiente).
-- **Falta instalar:** `mgp-biblioteca-core` (el plugin propio) — sigue
-  solo en este repo local, no desplegado aún al sitio real. Ver §7 para
-  el procedimiento de despliegue.
+- **Wordfence y `mgp-biblioteca-core`**: instalados y activados por el
+  usuario el 27/08/2026 — ver §10 para el detalle de la verificación y un
+  bug encontrado/corregido en ese mismo despliegue.
 
 ### Confirmación de arquitectura modular
 Se le explicó al usuario (y queda registrado aquí) el límite real de cada
@@ -194,4 +194,41 @@ módulo directamente. Único acoplamiento fuerte y consciente: la plantilla
 `includes/catalogo/template-tarjeta-libro.php` depende de las clases CSS
 exactas del diseño Elementor — si el diseño visual cambia, ese es el único
 archivo a tocar, aislado a propósito del resto de la lógica de datos.
+
+## 10. Despliegue en vivo y bug corregido (27/08/2026)
+
+**Estado confirmado en el sitio real** (vía `wp plugin list`, `wp post-type
+list`, `wp role list`, `wp taxonomy list`, `wp rewrite list`):
+- `mgp-biblioteca-core` v0.1.0 **activo** en producción.
+- Todos los plugins complementarios **activos**: DearFlip Lite, ACF,
+  FileBird, Members, UpdraftPlus, **Wordfence** (recién instalado y activado
+  por el usuario).
+- CPT `libro`, taxonomía `categoria_tecnica` y rol `Bibliotecario`
+  registrados correctamente en el sitio real.
+
+**Bug real encontrado y corregido**: la ruta del lector de PDF
+`/leer/{id}/` (registrada en `MGP_Lector::registrar_ruta()`) NO estaba en
+las reglas de reescritura del sitio → daba 404. Causa raíz: el hook de
+activación `mgp_bib_activar()` en `mgp-biblioteca-core.php` llamaba a
+`flush_rewrite_rules()` sin antes registrar esa regla en la misma
+petición (el `add_action('init', ...)` del constructor de `MGP_Lector` no
+alcanza a ejecutarse durante la activación).
+
+**Corrección aplicada** (código, no solo remedio manual):
+`mgp_bib_activar()` ahora hace `require_once` de
+`includes/lector/class-mgp-lector.php` y llama explícitamente
+`( new MGP_Lector() )->registrar_ruta();` ANTES de `flush_rewrite_rules()`.
+Aplicado en: (1) el repo local `plugin/mgp-biblioteca-core/mgp-biblioteca-core.php`,
+(2) el sitio real vía `novamira/execute-php`. Verificado end-to-end
+desactivando y reactivando el plugin en producción (`wp plugin
+deactivate/activate mgp-biblioteca-core`) y confirmando con `wp rewrite
+list` que la regla `^leer/([0-9]+)/?$` queda registrada automáticamente,
+sin flush manual.
+
+**Lección para el futuro**: cualquier regla de reescritura, CPT o
+taxonomía nueva que se agregue al plugin debe registrarse también dentro
+de `mgp_bib_activar()` antes del `flush_rewrite_rules()` final — no basta
+con que el hook `init` normal la registre, porque en el propio momento de
+activación ese hook ya pasó. Esto quedó documentado también como lección
+reusable en el skill de Novamira `desarrollo-plugin-modular-wordpress`.
 

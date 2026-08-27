@@ -66,10 +66,15 @@ también el plugin): `g-mgp-book-card`, `g-mgp-book-cover`,
 `g-mgp-btn-primary`, `g-mgp-btn-ghost`/`g-mgp-btn-saved`, `g-mgp-progress*`,
 `g-mgp-cat-card`, `g-mgp-search-slot`.
 
-Categorías vistas en el diseño (solo 3, **falta confirmar la lista
-completa de carreras del instituto con Biblioteca/Coordinación
-académica** — el diseño no incluye Enfermería, por ejemplo):
+Categorías vigentes — **confirmado por el usuario (27/08/2026): el
+instituto solo dicta 3 Carreras Técnicas Profesionales de 3 años, por
+lo que estas 3 categorías son la lista completa por ahora** (no
+"faltaba confirmar", como se pensaba antes):
 Computación e informática, Contabilidad, Mecánica de producción.
+Si el instituto abre una carrera nueva en el futuro, se puede crear la
+categoría en cualquier momento desde Libros → Categorías técnicas (es
+una taxonomía nativa de WordPress, no requiere tocar código) — el
+plugin ya avisa de esto en el admin, ver MGP_Aviso_Categorias en §12.
 
 ## 4. Plugin `mgp-biblioteca-core` — qué existe hoy (v0.1.0)
 
@@ -266,4 +271,85 @@ WordPress (`wp.media`) en vez de pedir el ID de adjunto a mano. Cambios:
   `novamira/write-file` para el JS — `write-file`/`edit-file` de Novamira
   NO permiten escribir `.php` fuera de `wp-content/novamira-sandbox/`, por
   eso el PHP se escribe con `execute-php` + `file_put_contents`).
+
+## 12. Página individual del libro + aviso de categorías (v0.3.0, 27/08/2026)
+
+**Categorías confirmadas**: el instituto solo tiene 3 Carreras Técnicas
+Profesionales de 3 años — las 3 categorías actuales (Computación,
+Contabilidad, Mecánica de producción) son la lista completa por ahora.
+Se pueden crear categorías nuevas en cualquier momento (taxonomía nativa
+de WordPress, sin tocar código) si el instituto abre una carrera. Nuevo
+módulo `MGP_Aviso_Categorias` (`includes/cpt/class-mgp-aviso-categorias.php`):
+muestra un aviso (`admin_notices`) en la pantalla de crear/editar un
+libro, listando las categorías vigentes y recordando crear la categoría
+ANTES de subir un libro de una carrera nueva. Es solo un recordatorio de
+flujo de trabajo, no una restricción técnica.
+
+**Página individual del libro**: nueva plantilla propia
+`templates/single-libro.php`, cargada solo para el CPT `libro` vía el
+filtro `single_template` en el nuevo módulo
+`includes/plantillas/class-mgp-plantilla-single-libro.php`. Por qué una
+plantilla propia y no un "Single Post" de Elementor: el sitio solo tiene
+Elementor gratuito + Header Footer Elementor, sin Theme Builder para
+CPTs personalizados (eso es de Elementor Pro). La plantilla reutiliza
+`get_header()`/`get_footer()` del tema (mismo menú, sesión y pie de
+página del resto del sitio) y replica el sistema de diseño "Biblioteca
+MGP Nocturna" con variables CSS propias en
+`assets/css/mgp-single-libro.css` (colores, tipografías Space
+Grotesk/Inter, radios, espaciados — tomados de `novamira/get-active-design`
+para que sea EXACTO, no aproximado).
+
+**Lector DearFlip embebido — cómo se integró (investigación real, no
+supuesta)**: se inspeccionó el JS fuente de DearFlip Lite
+(`assets/js/dflip.js`) en el propio servidor para confirmar el método de
+incrustación manual, ya que el shortcode `[dflip]` de este plugin espera
+un post de SU PROPIO CPT `dflip` — no sirve para libros que viven en
+nuestro CPT `libro`. Confirmado en el código fuente: cualquier elemento
+`<div class="df-element" source="URL_DEL_PDF" height="..." webgl="...">`
+es detectado automáticamente por dflip.js (escanea `.df-element` y lee
+sus atributos vía `getAttributes()`, alias `source`/`pdf-source`/`df-source`).
+Por eso `single-libro.php` NO usa el shortcode: arma ese `div` directo,
+apuntando `source` a la ruta protegida `/leer/{id}/` (nunca a la URL
+directa del adjunto). DearFlip Lite registra sus propios handles
+`dflip-script`/`dflip-style` en `wp_enqueue_scripts`; nuestro módulo los
+reencola (si ya están registrados) con prioridad 20 para no depender del
+orden de carga.
+
+**Mejora de seguridad/rendimiento en el lector**: `MGP_Lector::entregar_pdf()`
+ahora soporta peticiones HTTP Range (`Range: bytes=inicio-fin`), necesario
+para que el visor cargue PDFs grandes en fragmentos en vez de descargar
+el archivo completo de una vez — mejor para el estudiante y para el
+ancho de banda del hosting de 1GB. Cambió de `fpassthru()` a un bucle
+`fread()` de 8KB por bloque para poder respetar el rango pedido.
+
+**Despliegue**: se intentó primero subir el plugin completo empaquetado
+en un .zip vía `novamira/create-upload-link` (más eficiente que archivo
+por archivo) — **falló**: el contenedor de este chat no tiene salida de
+red directa hacia biblioteca.mgp.edu.pe (`curl` dio `CONNECT tunnel
+failed, 403`). Se volvió al método ya usado en v0.2.0: cada archivo PHP
+se escribe en el servidor vía `novamira/execute-php` +
+`file_put_contents()` con el contenido en base64; los archivos no-PHP
+(CSS) van directo con `novamira/write-file`. **Para una sesión futura**:
+si se necesita subir MUCHOS archivos de una vez, este método
+archivo-por-archivo es lento — considerar si el contenedor de esa sesión
+sí tiene salida de red hacia el sitio antes de descartar el enfoque zip.
+
+**Verificación en vivo**: se creó un post de prueba del CPT `libro`
+(`wp post create`), se confirmó por `WebFetch` que la página
+`/libro/libro-de-prueba-borrar/` carga sin error fatal, con el título,
+el encabezado y el aviso de login correctos, y se revisó que no haya
+nada nuevo en `debug.log`. El post de prueba se borró después
+(`wp post delete --force`).
+
+**Archivos nuevos en v0.3.0**:
+- `includes/plantillas/class-mgp-plantilla-single-libro.php`
+- `templates/single-libro.php`
+- `assets/css/mgp-single-libro.css`
+- `includes/cpt/class-mgp-aviso-categorias.php`
+
+**Archivos modificados en v0.3.0**:
+- `includes/class-mgp-loader.php` (registra los 2 módulos nuevos)
+- `includes/lector/class-mgp-lector.php` (soporte de Range)
+- `mgp-biblioteca-core.php` (versión 0.3.0)
+- `readme.txt` (changelog)
 

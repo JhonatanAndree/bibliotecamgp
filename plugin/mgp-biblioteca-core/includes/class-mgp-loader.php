@@ -74,6 +74,14 @@ final class MGP_Loader {
 		require_once MGP_BIB_PATH . 'includes/usuario/class-mgp-usuario.php';
 		( new MGP_Usuario() )->registrar_hooks();
 
+		// --- Página individual del libro (plantilla + lector DearFlip) ---
+		require_once MGP_BIB_PATH . 'includes/plantillas/class-mgp-plantilla-single-libro.php';
+		( new MGP_Plantilla_Single_Libro() )->registrar_hooks();
+
+		// --- Aviso en el admin: categorías técnicas disponibles hoy -------
+		require_once MGP_BIB_PATH . 'includes/cpt/class-mgp-aviso-categorias.php';
+		( new MGP_Aviso_Categorias() )->registrar_hooks();
+
 		// --- Assets (CSS/JS), cargados solo en las páginas que los usan ---
 		add_action( 'wp_enqueue_scripts', array( $this, 'cargar_assets' ) );
 	}

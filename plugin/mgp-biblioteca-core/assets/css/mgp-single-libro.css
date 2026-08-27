@@ -1,0 +1,202 @@
+/**
+ * Estilos de la página individual de un libro (single-libro.php).
+ *
+ * Los valores de color/tipografía/espaciado/radio replican EXACTAMENTE el
+ * sistema de diseño activo del sitio "Biblioteca MGP Nocturna" (ver
+ * novamira/get-active-design). Se declaran como variables CSS propias en
+ * vez de depender de clases globales de Elementor, para que esta página se
+ * vea igual al resto del sitio incluso si el diseño se reconstruye o
+ * Elementor cambia de versión — el plugin no debe depender de Elementor.
+ *
+ * Si el sistema de diseño cambia (colores, tipografías), actualizar
+ * PRIMERO aquí las variables :root y el resto de la hoja se ajusta solo.
+ */
+
+.mgp-single-libro {
+	--mgp-bg: #101319;
+	--mgp-card: #1d2230;
+	--mgp-border: #2a3040;
+	--mgp-ink: #f2f4f8;
+	--mgp-ink-muted: #9aa4b8;
+	--mgp-ink-faint: #6b7386;
+	--mgp-accent: #e6432c;
+	--mgp-on-accent: #171316;
+	--mgp-info: #4a90d9;
+	--mgp-cover-stripe: #232838;
+	--mgp-font-heading: 'Space Grotesk', sans-serif;
+	--mgp-font-body: 'Inter', sans-serif;
+	--mgp-radius-md: 14px;
+	--mgp-radius-lg: 16px;
+	--mgp-radius-pill: 999px;
+
+	background: var( --mgp-bg );
+	color: var( --mgp-ink );
+	font-family: var( --mgp-font-body );
+	padding: 40px 48px 64px;
+}
+
+@media ( max-width: 768px ) {
+	.mgp-single-libro {
+		padding: 24px 20px 48px;
+	}
+}
+
+.mgp-single-libro__col {
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+.mgp-single-libro__volver {
+	margin-bottom: 24px;
+}
+
+.mgp-single-libro__volver a {
+	color: var( --mgp-ink-muted );
+	font-size: 14px;
+	text-decoration: none;
+}
+
+.mgp-single-libro__volver a:hover {
+	color: var( --mgp-ink );
+}
+
+.mgp-single-libro__cabecera {
+	display: flex;
+	gap: 32px;
+	align-items: flex-start;
+	background: var( --mgp-card );
+	border: 1px solid var( --mgp-border );
+	border-radius: var( --mgp-radius-lg );
+	padding: 24px;
+	margin-bottom: 36px;
+}
+
+@media ( max-width: 768px ) {
+	.mgp-single-libro__cabecera {
+		flex-direction: column;
+	}
+}
+
+.mgp-single-libro__portada {
+	flex: 0 0 220px;
+	height: 300px;
+	border-radius: var( --mgp-radius-md );
+	overflow: hidden;
+	background: var( --mgp-cover-stripe );
+}
+
+.mgp-single-libro__portada img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+/* Placeholder de portada: mismo patrón diagonal que las tarjetas del
+   catálogo (ver DESIGN.md: "usar la trama diagonal para portada ausente"). */
+.mgp-single-libro__portada-vacia {
+	width: 100%;
+	height: 100%;
+	background-image: repeating-linear-gradient(
+		45deg,
+		var( --mgp-cover-stripe ),
+		var( --mgp-cover-stripe ) 10px,
+		var( --mgp-card ) 10px,
+		var( --mgp-card ) 20px
+	);
+}
+
+.mgp-single-libro__info {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.mgp-single-libro__tag {
+	display: inline-block;
+	font-family: var( --mgp-font-body );
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	padding: 4px 12px;
+	border-radius: var( --mgp-radius-pill );
+	background: color-mix( in srgb, var( --mgp-info ) 16%, transparent );
+	color: var( --mgp-info );
+	margin-bottom: 12px;
+}
+
+/* Las tres categorías vigentes usan el color de tag ya definido en el
+   sistema de diseño (ver DESIGN.md: Computación=info, Contabilidad=accent,
+   Mecánica=gold). Si se agrega una categoría nueva sin regla aquí, cae en
+   el color por defecto (--mgp-info) — no rompe el diseño, solo no tiene
+   un color dedicado hasta que se agregue. */
+.mgp-single-libro__tag[data-categoria="contabilidad"] {
+	background: color-mix( in srgb, var( --mgp-accent ) 16%, transparent );
+	color: var( --mgp-accent );
+}
+
+.mgp-single-libro__tag[data-categoria="mecanica-de-produccion"],
+.mgp-single-libro__tag[data-categoria="mecanica"] {
+	background: color-mix( in srgb, #c9a35c 16%, transparent );
+	color: #c9a35c;
+}
+
+.mgp-single-libro__titulo {
+	font-family: var( --mgp-font-heading );
+	font-weight: 700;
+	font-size: 26px;
+	line-height: 1.3;
+	color: var( --mgp-ink );
+	margin: 0 0 8px;
+}
+
+.mgp-single-libro__autor {
+	font-size: 14px;
+	color: var( --mgp-ink-muted );
+	margin: 0 0 16px;
+}
+
+.mgp-single-libro__acceso {
+	font-size: 13px;
+	color: var( --mgp-ink-faint );
+	margin: 0 0 20px;
+}
+
+.mgp-single-libro__btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 40px;
+	padding: 0 20px;
+	border-radius: 10px;
+	font-family: var( --mgp-font-body );
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: none;
+	border: none;
+	cursor: pointer;
+}
+
+.mgp-single-libro__btn--primario {
+	background: var( --mgp-accent );
+	color: var( --mgp-on-accent );
+}
+
+.mgp-single-libro__btn--primario:hover {
+	background: color-mix( in srgb, var( --mgp-accent ) 88%, black );
+	color: var( --mgp-on-accent );
+}
+
+.mgp-single-libro__lector {
+	background: var( --mgp-card );
+	border: 1px solid var( --mgp-border );
+	border-radius: var( --mgp-radius-lg );
+	padding: 16px;
+}
+
+.mgp-single-libro__aviso {
+	color: var( --mgp-ink-muted );
+	font-size: 14px;
+	text-align: center;
+	padding: 40px 20px;
+}

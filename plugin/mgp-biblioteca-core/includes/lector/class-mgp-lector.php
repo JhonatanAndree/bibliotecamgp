@@ -88,8 +88,14 @@ class MGP_Lector {
 	 * Envía el archivo al navegador SIN cargarlo entero en memoria PHP
 	 * (crítico en un servidor de 1GB de RAM: un PDF de 40-80MB cargado con
 	 * file_get_contents podría agotar la memoria disponible si varios
-	 * estudiantes leen a la vez). Se usa fpassthru(), que transmite el
-	 * archivo en streaming por partes.
+	 * estudiantes leen a la vez). Se usa fopen()/fread() en bloques,
+	 * transmitiendo el archivo en streaming por partes.
+	 *
+	 * Soporta peticiones HTTP Range (Range: bytes=inicio-fin): el lector
+	 * DearFlip (y los navegadores en general) las usan para pedir solo el
+	 * fragmento del PDF que necesitan en ese momento, en vez de descargar
+	 * el archivo completo de una — más rápido para el estudiante y menos
+	 * ancho de banda gastado en el hosting.
 	 */
 	private function entregar_pdf( int $libro_id ): void {
 		$adjunto_id = (int) get_post_meta( $libro_id, '_mgp_archivo_pdf_id', true );
@@ -99,16 +105,54 @@ class MGP_Lector {
 			wp_die( esc_html__( 'El archivo de este libro no está disponible todavía.', 'mgp-biblioteca' ), 404 );
 		}
 
+		$tamano_total = filesize( $ruta );
+		$inicio       = 0;
+		$fin          = $tamano_total - 1;
+		$es_parcial   = false;
+
+		// ¿El navegador/lector pidió un rango específico de bytes?
+		if ( isset( $_SERVER['HTTP_RANGE'] ) ) {
+			$rango = sanitize_text_field( wp_unslash( $_SERVER['HTTP_RANGE'] ) );
+			if ( preg_match( '/bytes=(\d*)-(\d*)/', $rango, $coincidencias ) ) {
+				$es_parcial = true;
+				if ( '' !== $coincidencias[1] ) {
+					$inicio = (int) $coincidencias[1];
+				}
+				if ( '' !== $coincidencias[2] ) {
+					$fin = min( (int) $coincidencias[2], $tamano_total - 1 );
+				}
+				if ( $inicio > $fin || $inicio >= $tamano_total ) {
+					header( 'Content-Range: bytes */' . $tamano_total );
+					wp_die( esc_html__( 'Rango solicitado no válido.', 'mgp-biblioteca' ), 416 );
+				}
+			}
+		}
+
 		// Cabeceras de seguridad y de presentación en línea (no descarga).
 		nocache_headers(); // No permitir que navegadores/proxies cacheen contenido restringido.
 		header( 'Content-Type: application/pdf' );
 		header( 'Content-Disposition: inline; filename="' . basename( $ruta ) . '"' );
 		header( 'X-Content-Type-Options: nosniff' );
-		header( 'Content-Length: ' . filesize( $ruta ) );
+		header( 'Accept-Ranges: bytes' );
+		header( 'Content-Length: ' . ( $fin - $inicio + 1 ) );
+
+		if ( $es_parcial ) {
+			status_header( 206 );
+			header( "Content-Range: bytes {$inicio}-{$fin}/{$tamano_total}" );
+		}
 
 		$manejador = fopen( $ruta, 'rb' );
 		if ( $manejador ) {
-			fpassthru( $manejador );
+			fseek( $manejador, $inicio );
+			$restante        = $fin - $inicio + 1;
+			$tamano_bloque   = 8192; // 8KB por bloque: streaming liviano en RAM.
+
+			while ( $restante > 0 && ! feof( $manejador ) ) {
+				$leer = min( $tamano_bloque, $restante );
+				echo fread( $manejador, $leer ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- binario, no HTML.
+				$restante -= $leer;
+				flush();
+			}
 			fclose( $manejador );
 		}
 		exit;

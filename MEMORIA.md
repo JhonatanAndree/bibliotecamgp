@@ -446,3 +446,42 @@ falta de red saliente del contenedor de este chat):
 - Config de WordPress (no versionada en Git): `show_on_front=page`,
   `page_on_front=46`.
 
+### 13.1 Bug encontrado y corregido al probar el login (28/08/2026)
+
+Al pedir "prueba el login" se encontró un bug real en `MGP_Acceso`: el
+shortcode `[mgp_login]` llamaba a `wp_safe_redirect()` + `exit;` cuando
+detectaba una sesión ya iniciada. Esto es un antipatrón de WordPress —
+un shortcode puede ejecutarse en contextos donde terminar el proceso a
+medio render rompe la respuesta completa (vistas previas del editor,
+llamadas REST/AJAX, u otro código que capture su salida con output
+buffering, como hace `novamira/execute-php`). Se detectó exactamente
+así: al probar `do_shortcode('[mgp_login]')` desde una sesión ya
+autenticada, el `exit()` cortaba el proceso PHP a medio responder y la
+petición completa fallaba (502 en el proxy).
+
+**Fix**: se movió TODA la lógica de redirect a `exigir_login()` (hook
+`template_redirect`, que corre antes de cualquier salida) — incluyendo
+el caso "usuario ya logueado visita /login/", que antes vivía
+(incorrectamente) dentro del shortcode. El shortcode ahora nunca
+redirige ni llama a `exit()`: si se renderiza estando logueado, solo
+devuelve un aviso HTML simple con un enlace a Inicio. Regla general para
+el futuro de este proyecto: **ningún shortcode debe llamar a `exit()`
+o `wp_die()`**, los redirects van siempre en hooks tempranos como
+`template_redirect` o `init`.
+
+**Verificación completa tras el fix** (todo ejecutado en el propio
+servidor vía `wp_remote_get`/`wp_remote_post` para no depender de la
+falta de red saliente del contenedor de este chat):
+- `do_shortcode('[mgp_login]')` estando logueado ya NO rompe la
+  respuesta — devuelve el aviso "Ya iniciaste sesión" correctamente.
+- `GET /login/` anónimo → `200`.
+- Usuario de prueba temporal (`TEST-0000`) creado, logueado por
+  `wp-login.php` con usuario+contraseña → cookie
+  `wordpress_logged_in_...` emitida correctamente.
+- Con esa sesión: `GET /` → `200` (contenido real de Inicio, sin
+  redirect); `GET /catalogo/` → `200` (ya no manda a `/login/`);
+  `GET /inicio/` → `301` a `/` — esto es comportamiento NORMAL de
+  WordPress (no un bug): al ser `/inicio/` la portada estática
+  (`page_on_front`), WP canonicaliza su URL propia hacia `/`.
+- Usuario de prueba eliminado al terminar.
+

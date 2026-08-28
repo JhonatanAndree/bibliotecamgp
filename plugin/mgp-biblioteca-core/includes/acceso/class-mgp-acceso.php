@@ -30,16 +30,30 @@ class MGP_Acceso {
 	/**
 	 * Puerta de entrada del sitio. Si no hay sesión iniciada, solo se
 	 * permite ver la página de login; cualquier otra URL redirige ahí.
+	 * Si SÍ hay sesión y el visitante insiste en ver /login/, se lo manda
+	 * a /inicio/ — no tiene sentido mostrarle el formulario de nuevo.
 	 * AJAX, cron y REST no pasan por template_redirect en el flujo normal
 	 * de WordPress, pero se excluyen explícitamente por seguridad ante
 	 * cambios futuros del núcleo.
+	 *
+	 * IMPORTANTE: todos los redirects viven aquí, en template_redirect
+	 * (antes de que se envíe cualquier salida), y NUNCA dentro del
+	 * shortcode [mgp_login]. Un shortcode puede ejecutarse en contextos
+	 * donde llamar a exit() a medio render rompe la respuesta completa
+	 * (previews del editor, REST, u otros plugins que capturan su salida
+	 * con output buffering) — de ahí que el shortcode solo devuelva HTML,
+	 * nunca redirige ni termina el proceso.
 	 */
 	public function exigir_login(): void {
-		if ( is_user_logged_in() ) {
+		if ( wp_doing_ajax() || wp_doing_cron() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
 			return;
 		}
 
-		if ( wp_doing_ajax() || wp_doing_cron() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+		if ( is_user_logged_in() ) {
+			if ( is_page( 'login' ) ) {
+				wp_safe_redirect( home_url( '/inicio/' ) );
+				exit;
+			}
 			return;
 		}
 
@@ -55,11 +69,14 @@ class MGP_Acceso {
 	 * [mgp_login] — formulario de acceso. El "usuario" es, en la
 	 * práctica, el código de estudiante que el bibliotecario asigna al
 	 * crear la cuenta (rol "subscriber" o "bibliotecario" según el caso).
+	 * Si por algún motivo se renderiza estando ya logueado (p. ej. una
+	 * vista previa), muestra un aviso simple en vez de forzar un redirect
+	 * — ver la nota en exigir_login() sobre por qué un shortcode nunca
+	 * debe llamar a exit().
 	 */
 	public function shortcode_login(): string {
 		if ( is_user_logged_in() ) {
-			wp_safe_redirect( home_url( '/inicio/' ) );
-			exit;
+			return '<p class="mgp-login-ya-dentro">' . esc_html__( 'Ya iniciaste sesión.', 'mgp-biblioteca' ) . ' <a href="' . esc_url( home_url( '/inicio/' ) ) . '">' . esc_html__( 'Ir a Inicio', 'mgp-biblioteca' ) . '</a></p>';
 		}
 
 		ob_start();

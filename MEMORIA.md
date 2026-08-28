@@ -538,3 +538,51 @@ para el HTML exacto entregado.
 - Datos del sitio (no versionados en Git): 3 términos de
   `categoria_tecnica` creados.
 
+## 15. Corrección de rumbo: chips por CLASE CSS, no por atributo (v0.4.2, 28/08/2026)
+
+El usuario mandó una captura de la página Catálogo ya construida en
+Elementor: tenía tarjetas y chips de MUESTRA hechos a mano (no vienen
+del plugin) y no encontraba dónde escribir el atributo
+`data-mgp-categoria` que se le había indicado. Motivo real: Elementor
+**gratuito** no tiene el panel "Atributos personalizados" (Custom
+Attributes) — es una función exclusiva de Elementor Pro. El plan
+anterior (widget HTML con `data-mgp-categoria="slug"`) seguía siendo
+técnicamente válido pero obligaba a construir los botones desde cero en
+HTML crudo, perdiendo el estilo que el usuario ya tenía armado con
+widgets nativos.
+
+**Cambio de arquitectura**: `mgp-catalogo.js` ya NO busca
+`data-mgp-categoria`. Ahora cada chip se identifica por una CLASE CSS,
+usando un mapa fijo en el JS:
+
+| Clase CSS (a escribir en Elementor) | Categoría |
+|---|---|
+| `cat-todos` | Todos |
+| `cat-computacion` | Computación e informática |
+| `cat-contabilidad` | Contabilidad |
+| `cat-mecanica` | Mecánica de producción |
+
+El campo **"Clases CSS"** SÍ existe en la versión gratuita de Elementor
+(pestaña Avanzado de cualquier widget) — a diferencia de "Atributos
+personalizados". Esto permite al usuario seguir usando sus widgets
+nativos (Botón, Icon Box, Tabs, lo que sea) y solo agregar dos clases en
+ese campo: `g-mgp-cat-card` (marca general de "esto es un chip de
+filtro", ya usado por el JS) + la clase específica de la tabla de
+arriba. El contenedor de tarjetas (`g-mgp-row-wrap`) y el buscador
+(`.g-mgp-search-slot input`) también se resuelven con el mismo campo
+"Clases CSS" sobre el contenedor/wrapper que ya tienen, sin necesidad de
+widgets HTML nuevos.
+
+**Advertencia dada al usuario**: en cuanto agregue la clase
+`g-mgp-row-wrap` al contenedor, el JS reemplaza su contenido con el
+catálogo real al cargar la página (por el cambio de v0.4.1) — las
+tarjetas de muestra desaparecerán y, como todavía no hay libros
+publicados, se verá "No se encontraron libros con ese filtro" hasta que
+suba al menos uno.
+
+**Archivos modificados en v0.4.2**:
+- `assets/js/mgp-catalogo.js` (identificación de chips por clase, no
+  por atributo)
+- `mgp-biblioteca-core.php` (versión 0.4.2)
+- `readme.txt` (changelog)
+

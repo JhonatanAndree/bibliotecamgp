@@ -3,7 +3,7 @@ Contributors: ti-mgp
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.4.1
+Stable tag: 0.4.2
 License: GPLv2 or later
 
 Motor de datos de la biblioteca virtual del IESTP Manuel Gonzales Prada.
@@ -13,6 +13,14 @@ en biblioteca.mgp.edu.pe. Depende de DearFlip Lite (lector) y de Members
 (el plugin verifica su presencia antes de usarlos).
 
 == Registro de cambios ==
+
+= 0.4.2 =
+* Cambio: los chips de categoría del catálogo ya no se identifican por
+  el atributo data-mgp-categoria (requiere "Atributos personalizados",
+  función de Elementor Pro), sino por clases CSS (cat-todos,
+  cat-computacion, cat-contabilidad, cat-mecanica) — el campo "Clases
+  CSS" del panel Avanzado sí existe en Elementor gratuito, en cualquier
+  widget. Así se puede cablear el catálogo sin licencia Pro.
 
 = 0.4.1 =
 * Fix: el shortcode [mgp_login] ya no llama a exit() al detectar una

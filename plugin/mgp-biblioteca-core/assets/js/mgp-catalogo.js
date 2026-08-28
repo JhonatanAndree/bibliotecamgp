@@ -53,5 +53,9 @@
 				temporizadorBusqueda = setTimeout( pedirCatalogo, 400 );
 			} );
 		}
+
+		// Carga inicial: pintar los libros reales apenas se abre la página,
+		// en vez de dejar la grilla vacía hasta el primer clic/búsqueda.
+		pedirCatalogo();
 	} );
 }() );

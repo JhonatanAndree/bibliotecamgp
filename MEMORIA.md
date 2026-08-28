@@ -485,3 +485,56 @@ falta de red saliente del contenedor de este chat):
   (`page_on_front`), WP canonicaliza su URL propia hacia `/`.
 - Usuario de prueba eliminado al terminar.
 
+## 14. Categorías técnicas creadas + carga automática del catálogo (v0.4.1, 28/08/2026)
+
+**El usuario confirmó que ya insertó `[mgp_login]` en la página Login vía
+Elementor.** Se verificó en vivo: el shortcode está en `_elementor_data`
+(el post_content de una página Elementor con header/footer casi nunca
+se actualiza, así que buscar ahí daba falso negativo — hay que revisar
+`_elementor_data`), y `/login/` responde 200 con el campo de usuario,
+el botón "Ingresar" y la clase `mgp-login` presentes. **Página Login:
+terminada.**
+
+**Hallazgo importante antes de armar el Catálogo**: las 3 categorías
+técnicas (confirmadas por el usuario en §3/§12) NUNCA se habían creado
+como términos reales de la taxonomía `categoria_tecnica` — estaba
+registrada pero vacía. Se crearon ahora vía `wp_insert_term()`:
+
+| Nombre | Slug |
+|---|---|
+| Computación e informática | `computacion-e-informatica` |
+| Contabilidad | `contabilidad` |
+| Mecánica de producción | `mecanica-de-produccion` |
+
+Los slugs de Contabilidad y Mecánica de producción coinciden con los
+selectores CSS ya escritos en `mgp-single-libro.css`
+(`[data-categoria="contabilidad"]`, `[data-categoria="mecanica-de-produccion"]`
+/ `"mecanica"`) — se usaron esos mismos slugs a propósito para no tener
+que tocar el CSS.
+
+**Cambio en `mgp-catalogo.js`**: por decisión del usuario, se agregó una
+llamada a `pedirCatalogo()` justo después de registrar los listeners de
+clic/búsqueda, así el catálogo pinta los libros reales apenas se abre la
+página en vez de esperar la primera interacción.
+
+**Verificado en vivo** (usuario de prueba temporal, igual que en §13):
+`/catalogo/` logueado → `200`; nonce extraído de la página y usado para
+llamar `admin-ajax.php?action=mgp_filtrar_catalogo` → `200` con
+`{"success":true,"data":{"html":"<p class=\"g-mgp-empty\">No se
+encontraron libros con ese filtro.</p>"}}` — respuesta correcta, ya que
+todavía no hay ningún libro publicado. Usuario de prueba eliminado.
+
+**Pendiente**: falta que el usuario cablee en Elementor (widget HTML,
+versión gratuita) el contenedor `g-mgp-row-wrap`, los chips
+`data-mgp-categoria` con los 3 slugs de arriba (+ uno `"todos"`), y el
+buscador dentro de `.g-mgp-search-slot`. Ver el mensaje de esa sesión
+para el HTML exacto entregado.
+
+**Archivos modificados en v0.4.1**:
+- `includes/acceso/class-mgp-acceso.php` (fix del `exit()` en el shortcode)
+- `assets/js/mgp-catalogo.js` (carga automática al abrir)
+- `mgp-biblioteca-core.php` (versión 0.4.1)
+- `readme.txt` (changelog)
+- Datos del sitio (no versionados en Git): 3 términos de
+  `categoria_tecnica` creados.
+

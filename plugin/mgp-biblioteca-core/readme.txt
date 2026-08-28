@@ -3,7 +3,7 @@ Contributors: ti-mgp
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.4.0
+Stable tag: 0.4.1
 License: GPLv2 or later
 
 Motor de datos de la biblioteca virtual del IESTP Manuel Gonzales Prada.
@@ -13,6 +13,15 @@ en biblioteca.mgp.edu.pe. Depende de DearFlip Lite (lector) y de Members
 (el plugin verifica su presencia antes de usarlos).
 
 == Registro de cambios ==
+
+= 0.4.1 =
+* Fix: el shortcode [mgp_login] ya no llama a exit() al detectar una
+  sesión iniciada (antipatrón que podía romper la respuesta en
+  contextos como previews o llamadas REST/AJAX) — ese caso se movió al
+  hook template_redirect, donde vive el resto de los redirects.
+* Mejora: el catálogo (/catalogo/) ahora carga los libros reales al
+  abrir la página, en vez de esperar el primer clic en un filtro o una
+  búsqueda.
 
 = 0.4.0 =
 * Nuevo: puerta de acceso de todo el sitio (MGP_Acceso). Cualquier visitante

@@ -1,9 +1,9 @@
 # Ruta de implementación — Biblioteca Virtual MGP
 
-Estado: **plugin propio v0.4.0, puerta de login de todo el sitio en vivo
-(código de estudiante = usuario + contraseña), portada estática = Inicio
-(28/08/2026).** Ver MEMORIA.md §10-§13 para el detalle de bugs corregidos
-y decisiones tomadas.
+Estado: **plugin propio v0.4.1. Página Login terminada y verificada en
+vivo. Categorías técnicas creadas. Catálogo con carga automática,
+pendiente de cablear en Elementor (28/08/2026).** Ver MEMORIA.md
+§10-§14 para el detalle de bugs corregidos y decisiones tomadas.
 
 ## Fase 0 — Hecho
 - Sitio Elementor diseñado y publicado en biblioteca.mgp.edu.pe (fuera de
@@ -32,11 +32,18 @@ y decisiones tomadas.
 - [x] Puerta de login de todo el sitio (`MGP_Acceso`) + shortcode
       `[mgp_login]` + portada estática = página Inicio — ver MEMORIA.md
       §13.
-- [ ] **Página Login**: agregar en Elementor el widget "Shortcode" con
-      `[mgp_login]` (única acción manual pendiente de esta página).
-- [ ] **Página Catálogo**: contenedor `g-mgp-row-wrap`, chips con
-      `data-mgp-categoria`, buscador en `.g-mgp-search-slot` — ver
-      MEMORIA.md §13 para los detalles exactos por widget.
+- [x] **Página Login**: shortcode `[mgp_login]` agregado por el usuario
+      en Elementor y verificado en vivo (200, formulario visible) — ver
+      MEMORIA.md §14.
+- [x] Categorías técnicas creadas como términos reales (antes solo
+      existían como decisión, no como datos) — ver MEMORIA.md §14.
+- [x] Catálogo: carga automática de libros reales al abrir la página
+      (antes solo cargaba tras el primer filtro/búsqueda) — v0.4.1.
+- [ ] **Página Catálogo**: falta que el usuario cablee en Elementor
+      (widget HTML, versión gratuita) el contenedor `g-mgp-row-wrap`,
+      los chips `data-mgp-categoria` (slugs: `computacion-e-informatica`,
+      `contabilidad`, `mecanica-de-produccion`, + `todos`), y el
+      buscador en `.g-mgp-search-slot`.
 - [ ] **Página Inicio**: reemplazar el saludo y los "Sigue leyendo" de
       muestra (hardcodeados) por datos reales del usuario logueado.
 - [ ] **Página Mis libros**: sin revisar todavía.

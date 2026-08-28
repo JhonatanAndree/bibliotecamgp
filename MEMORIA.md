@@ -353,3 +353,96 @@ nada nuevo en `debug.log`. El post de prueba se borró después
 - `mgp-biblioteca-core.php` (versión 0.3.0)
 - `readme.txt` (changelog)
 
+## 13. Login/puerta de acceso + arranque del cableado Elementor (v0.4.0, 28/08/2026)
+
+**Decisión de login confirmada por el usuario**: el "código de estudiante"
+es el **nombre de usuario** de una cuenta WordPress normal, con
+**contraseña** (definida por el bibliotecario o autogenerada al crear la
+cuenta). No es login sin contraseña ni código+DNI — se descartaron esas
+dos opciones. Se implementó con `wp_login_form()` del núcleo de
+WordPress (no se reinventó la autenticación), así se heredan sus
+protecciones y las de Wordfence (ya instalado) sin código extra.
+
+**Lo que se construyó**:
+- `includes/acceso/class-mgp-acceso.php` (`MGP_Acceso`), nuevo módulo:
+  - Hook `template_redirect`: cualquier visitante sin sesión iniciada que
+    pida cualquier página del sitio (excepto `/login/`) es redirigido a
+    `/login/`. Excluye explícitamente AJAX/cron/REST por seguridad ante
+    cambios futuros del núcleo, aunque esas rutas no pasan por
+    `template_redirect` en el flujo normal.
+  - Shortcode `[mgp_login]`: imprime `wp_login_form()` con las etiquetas
+    en español ("Código de estudiante" / "Contraseña" / "Ingresar"),
+    dentro de un `<div class="mgp-login">` estilado con
+    `assets/css/mgp-login.css` (mismos tokens del sistema de diseño
+    "Biblioteca MGP Nocturna"). Redirige a `/inicio/` tras loguearse; si
+    alguien ya logueado visita la página con el shortcode, se lo saca
+    directo a `/inicio/`.
+- CSS enqueued solo en `is_page('login')`, siguiendo el mismo patrón de
+  carga condicional del resto del plugin (RAM limitada).
+- **Config de sitio (no de código)**: se cambió `show_on_front` de
+  `posts` (mostraba el blog por defecto de WordPress — nunca se había
+  configurado) a `page`, con `page_on_front = 46` (la página "Inicio").
+  Antes de este cambio, la "puerta principal" del sitio (`/`) no
+  apuntaba a ninguna de las páginas del diseño real.
+
+**Por qué el flujo pedido por el usuario ya queda cubierto**: visitante
+entra a `/` (o a cualquier URL) sin sesión → `MGP_Acceso::exigir_login()`
+lo manda a `/login/` → inicia sesión con su código+contraseña vía el
+formulario `[mgp_login]` → WordPress redirige a `/inicio/`, donde ya no
+hay redirección porque `is_user_logged_in()` es verdadero.
+
+**Verificado en vivo** (vía `wp_remote_get`/`wp_remote_post` ejecutados
+en el propio servidor con `novamira/execute-php`, para no depender de la
+falta de red saliente del contenedor de este chat):
+- `GET /` anónimo → `302` a `https://biblioteca.mgp.edu.pe/login/`. ✅
+- `GET /catalogo/` anónimo → mismo `302` a `/login/`. ✅
+- `GET /login/` anónimo → `200` (única página accesible sin sesión). ✅
+- Se creó un usuario de prueba temporal (`TEST-0000` + contraseña
+  aleatoria), se autenticó vía `wp-login.php` con esas credenciales, y
+  las cookies de sesión (`wordpress_logged_in_...`) se emitieron
+  correctamente — confirma que el mecanismo usuario+contraseña funciona
+  tal como se decidió. Usuario de prueba eliminado al terminar.
+- `wp plugin list` confirma `mgp-biblioteca-core` v0.4.0 activo. Sin
+  errores nuevos en `debug.log` (no existe el archivo — no hay warnings
+  ni fatales acumulados).
+
+**Pendiente para la próxima sesión / página por página**:
+- Página **Login**: el usuario debe abrir el editor de Elementor y
+  agregar el widget **"Shortcode"** (incluido en la versión gratuita)
+  con el texto `[mgp_login]` donde quiera que aparezca el formulario. Es
+  la única acción manual que falta para esta página — todo lo demás ya
+  quedó resuelto en el backend.
+- Página **Catálogo**: reemplazar los rectángulos hechos a mano por un
+  contenedor con clase `g-mgp-row-wrap` (grilla, vía widget HTML), los
+  chips de categoría por widgets HTML con `data-mgp-categoria="slug"` (o
+  `"todos"`), y el buscador por un `<input>` dentro de
+  `.g-mgp-search-slot` (también HTML). El JS `mgp-catalogo.js` ya
+  detecta estas clases/atributos automáticamente — no requiere shortcode.
+  **Dato importante**: el catálogo NO carga libros reales al abrir la
+  página, solo al hacer clic en un filtro o escribir en el buscador —
+  decidir si se quiere una carga inicial automática (cambio chico en el
+  JS) antes de dar esta página por terminada.
+- Página **Inicio**: hoy tiene contenido de MUESTRA cableado a mano
+  ("Hola, Renzo" + 2 libros "Aprendiendo React"/"Git y GitHub desde
+  cero" fijos en el HTML) que NO es real — falta conectar el saludo con
+  el nombre del usuario logueado y la sección "Sigue leyendo" con su
+  progreso real (el backend de guardado/progreso ya existe desde
+  Fase 1, `MGP_Usuario`, pero no está enchufado a esta página).
+- Página **Mis libros**: pendiente de revisar (usa `mgp-lector.js`
+  además de los assets del catálogo) — no se tocó en esta sesión.
+- Subir al menos 1 libro real de prueba (**Libros → Añadir nuevo** en el
+  admin) para probar el catálogo con datos reales en cuanto se cablee la
+  página Catálogo.
+
+**Archivos nuevos en v0.4.0**:
+- `includes/acceso/class-mgp-acceso.php`
+- `assets/css/mgp-login.css`
+
+**Archivos modificados en v0.4.0**:
+- `includes/class-mgp-loader.php` (registra `MGP_Acceso`, agrega
+  `login` al enqueue condicional)
+- `mgp-biblioteca-core.php` (versión 0.4.0)
+- `readme.txt` (changelog)
+- Config de WordPress (no versionada en Git): `show_on_front=page`,
+  `page_on_front=46`.
+

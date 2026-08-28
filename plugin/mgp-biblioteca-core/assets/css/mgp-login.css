@@ -1,0 +1,71 @@
+/**
+ * Estilos del formulario [mgp_login]. Usa los mismos tokens del sistema
+ * de diseño "Biblioteca MGP Nocturna" que el resto del sitio, para que el
+ * formulario no se vea como un elemento ajeno pegado encima del diseño.
+ */
+.mgp-login {
+	--mgp-card: #1d2230;
+	--mgp-border: #2a3040;
+	--mgp-ink: #f2f4f8;
+	--mgp-ink-muted: #9aa4b8;
+	--mgp-accent: #e6432c;
+	--mgp-on-accent: #171316;
+	--mgp-radius-md: 14px;
+
+	max-width: 360px;
+	margin: 0 auto;
+	padding: 28px;
+	background: var( --mgp-card );
+	border: 1px solid var( --mgp-border );
+	border-radius: var( --mgp-radius-md );
+	font-family: 'Inter', sans-serif;
+	box-sizing: border-box;
+}
+
+.mgp-login form p {
+	margin: 0 0 16px;
+}
+
+.mgp-login label {
+	display: block;
+	margin-bottom: 6px;
+	color: var( --mgp-ink-muted );
+	font-size: 13px;
+}
+
+.mgp-login input[type='text'],
+.mgp-login input[type='password'] {
+	width: 100%;
+	padding: 10px 12px;
+	background: #101319;
+	border: 1px solid var( --mgp-border );
+	border-radius: 10px;
+	color: var( --mgp-ink );
+	font-size: 14px;
+	box-sizing: border-box;
+}
+
+.mgp-login input[type='submit'] {
+	width: 100%;
+	margin-top: 8px;
+	padding: 12px;
+	background: var( --mgp-accent );
+	color: var( --mgp-on-accent );
+	border: none;
+	border-radius: 999px;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.mgp-login .login-remember {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: var( --mgp-ink-muted );
+	font-size: 13px;
+}
+
+.mgp-login .login-remember label {
+	margin-bottom: 0;
+	display: inline;
+}

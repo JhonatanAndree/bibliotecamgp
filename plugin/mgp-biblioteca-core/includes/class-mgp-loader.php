@@ -47,6 +47,10 @@ final class MGP_Loader {
 	 */
 	public function run(): void {
 
+		// --- Acceso: puerta de login de todo el sitio ---------------------
+		require_once MGP_BIB_PATH . 'includes/acceso/class-mgp-acceso.php';
+		( new MGP_Acceso() )->registrar_hooks();
+
 		// --- Catálogo: qué ES un libro y cómo se categoriza --------------
 		require_once MGP_BIB_PATH . 'includes/cpt/class-mgp-cpt-libro.php';
 		require_once MGP_BIB_PATH . 'includes/cpt/class-mgp-tax-categoria.php';
@@ -98,43 +102,52 @@ final class MGP_Loader {
 		// actualizar este arreglo.
 		$paginas_con_biblioteca = array( 'catalogo', 'mis-libros', 'inicio' );
 
-		if ( ! is_page( $paginas_con_biblioteca ) ) {
-			return;
+		if ( is_page( $paginas_con_biblioteca ) ) {
+			wp_enqueue_style(
+				'mgp-biblioteca',
+				MGP_BIB_URL . 'assets/css/mgp-biblioteca.css',
+				array(),
+				MGP_BIB_VERSION
+			);
+
+			wp_enqueue_script(
+				'mgp-catalogo',
+				MGP_BIB_URL . 'assets/js/mgp-catalogo.js',
+				array(), // Sin dependencia de jQuery: usa fetch() nativo (más liviano).
+				MGP_BIB_VERSION,
+				true // Cargar en el footer.
+			);
+
+			// Datos que el JS necesita del backend: URL de AJAX y un nonce
+			// de seguridad (evita que cualquiera dispare peticiones falsas).
+			wp_localize_script(
+				'mgp-catalogo',
+				'mgpBiblioteca',
+				array(
+					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+					'nonce'   => wp_create_nonce( 'mgp_biblioteca_nonce' ),
+				)
+			);
+
+			if ( is_page( 'mis-libros' ) ) {
+				wp_enqueue_script(
+					'mgp-lector',
+					MGP_BIB_URL . 'assets/js/mgp-lector.js',
+					array(),
+					MGP_BIB_VERSION,
+					true
+				);
+			}
 		}
 
-		wp_enqueue_style(
-			'mgp-biblioteca',
-			MGP_BIB_URL . 'assets/css/mgp-biblioteca.css',
-			array(),
-			MGP_BIB_VERSION
-		);
-
-		wp_enqueue_script(
-			'mgp-catalogo',
-			MGP_BIB_URL . 'assets/js/mgp-catalogo.js',
-			array(), // Sin dependencia de jQuery: usa fetch() nativo (más liviano).
-			MGP_BIB_VERSION,
-			true // Cargar en el footer.
-		);
-
-		// Datos que el JS necesita del backend: URL de AJAX y un nonce de
-		// seguridad (evita que cualquiera dispare peticiones falsas).
-		wp_localize_script(
-			'mgp-catalogo',
-			'mgpBiblioteca',
-			array(
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'mgp_biblioteca_nonce' ),
-			)
-		);
-
-		if ( is_page( 'mis-libros' ) ) {
-			wp_enqueue_script(
-				'mgp-lector',
-				MGP_BIB_URL . 'assets/js/mgp-lector.js',
+		// La página de login solo necesita su propio CSS: formulario de
+		// acceso vía el shortcode [mgp_login], sin catálogo ni lector.
+		if ( is_page( 'login' ) ) {
+			wp_enqueue_style(
+				'mgp-login',
+				MGP_BIB_URL . 'assets/css/mgp-login.css',
 				array(),
-				MGP_BIB_VERSION,
-				true
+				MGP_BIB_VERSION
 			);
 		}
 	}

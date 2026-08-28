@@ -1,8 +1,9 @@
 # Ruta de implementación — Biblioteca Virtual MGP
 
-Estado: **plugin propio v0.3.0, plantilla single-libro con lector DearFlip
-en vivo, aviso de categorías en el admin (27/08/2026).** Ver MEMORIA.md
-§10-§12 para el detalle de bugs corregidos y decisiones tomadas.
+Estado: **plugin propio v0.4.0, puerta de login de todo el sitio en vivo
+(código de estudiante = usuario + contraseña), portada estática = Inicio
+(28/08/2026).** Ver MEMORIA.md §10-§13 para el detalle de bugs corregidos
+y decisiones tomadas.
 
 ## Fase 0 — Hecho
 - Sitio Elementor diseñado y publicado en biblioteca.mgp.edu.pe (fuera de
@@ -28,10 +29,19 @@ en vivo, aviso de categorías en el admin (27/08/2026).** Ver MEMORIA.md
       — ver MEMORIA.md §12.
 - [x] Aviso en el admin recordando las categorías técnicas vigentes antes
       de subir un libro de una carrera nueva — ver MEMORIA.md §12.
-- [ ] Conectar los chips de categoría y el buscador del diseño real con
-      los atributos `data-mgp-categoria` que espera `mgp-catalogo.js`.
-- [ ] Cargar el fondo bibliográfico real (o al menos los 6 libros de
-      prueba que ya aparecen en el diseño) como posts del CPT.
+- [x] Puerta de login de todo el sitio (`MGP_Acceso`) + shortcode
+      `[mgp_login]` + portada estática = página Inicio — ver MEMORIA.md
+      §13.
+- [ ] **Página Login**: agregar en Elementor el widget "Shortcode" con
+      `[mgp_login]` (única acción manual pendiente de esta página).
+- [ ] **Página Catálogo**: contenedor `g-mgp-row-wrap`, chips con
+      `data-mgp-categoria`, buscador en `.g-mgp-search-slot` — ver
+      MEMORIA.md §13 para los detalles exactos por widget.
+- [ ] **Página Inicio**: reemplazar el saludo y los "Sigue leyendo" de
+      muestra (hardcodeados) por datos reales del usuario logueado.
+- [ ] **Página Mis libros**: sin revisar todavía.
+- [ ] Subir un primer libro real de prueba (Libros → Añadir nuevo) para
+      validar el catálogo con datos reales en cuanto se cablee esa página.
 - [ ] **Empezar la carga real de hasta 200 libros**, uno por uno desde el
       admin (decisión confirmada — sin importador CSV).
 
@@ -40,7 +50,9 @@ en vivo, aviso de categorías en el admin (27/08/2026).** Ver MEMORIA.md
       por el usuario (27/08/2026) — ver MEMORIA.md §3 y §12.
 - [ ] Subir portadas reales.
 - [x] Selector visual de medios para el PDF (mejora del meta box) — v0.2.0.
-- [ ] Definir mecanismo de login por código de estudiante.
+- [x] Definir mecanismo de login por código de estudiante: usuario =
+      código, con contraseña (confirmado y construido, v0.4.0) — ver
+      MEMORIA.md §13.
 - [ ] Pruebas de carga con varios usuarios simultáneos (recordar límite
       de 1GB de RAM del hosting).
 - [ ] Capacitar al personal de biblioteca (rol `bibliotecario`).

@@ -3,7 +3,7 @@ Contributors: ti-mgp
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.3.0
+Stable tag: 0.4.0
 License: GPLv2 or later
 
 Motor de datos de la biblioteca virtual del IESTP Manuel Gonzales Prada.
@@ -13,6 +13,19 @@ en biblioteca.mgp.edu.pe. Depende de DearFlip Lite (lector) y de Members
 (el plugin verifica su presencia antes de usarlos).
 
 == Registro de cambios ==
+
+= 0.4.0 =
+* Nuevo: puerta de acceso de todo el sitio (MGP_Acceso). Cualquier visitante
+  sin sesión iniciada es redirigido a /login/; solo esa página es visible
+  sin loguearse. Login = código de estudiante como usuario + contraseña
+  normal (autenticación estándar de WordPress vía wp_login_form()).
+* Nuevo: shortcode [mgp_login] — formulario de acceso con el mismo
+  lenguaje visual del sitio, listo para insertarse en la página Login con
+  el widget "Shortcode" de Elementor (disponible en la versión gratuita).
+  Redirige a /inicio/ tras loguearse.
+* Config: la página "Inicio" queda como portada estática del sitio
+  (antes mostraba el listado de entradas del blog por defecto de
+  WordPress).
 
 = 0.3.0 =
 * Nuevo: plantilla propia de página individual del libro (single-libro.php),

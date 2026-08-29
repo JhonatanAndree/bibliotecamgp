@@ -78,6 +78,10 @@ final class MGP_Loader {
 		require_once MGP_BIB_PATH . 'includes/usuario/class-mgp-usuario.php';
 		( new MGP_Usuario() )->registrar_hooks();
 
+		// --- Página Inicio: saludo real + "Sigue leyendo" con datos reales -
+		require_once MGP_BIB_PATH . 'includes/inicio/class-mgp-inicio.php';
+		( new MGP_Inicio() )->registrar_hooks();
+
 		// --- Página individual del libro (plantilla + lector DearFlip) ---
 		require_once MGP_BIB_PATH . 'includes/plantillas/class-mgp-plantilla-single-libro.php';
 		( new MGP_Plantilla_Single_Libro() )->registrar_hooks();
@@ -118,14 +122,21 @@ final class MGP_Loader {
 				true // Cargar en el footer.
 			);
 
-			// Datos que el JS necesita del backend: URL de AJAX y un nonce
-			// de seguridad (evita que cualquiera dispare peticiones falsas).
+			// Datos que el JS necesita del backend: URL de AJAX, nonce de
+			// seguridad, y en qué página estamos. Este último dato es
+			// necesario porque catálogo (/catalogo/) e inicio (/inicio/)
+			// comparten la misma clase visual "mgp-row-wrap" para su grilla
+			// de tarjetas (es la clase real del diseño, ver MEMORIA.md §17)
+			// — sin esto, el JS del catálogo confundiría la grilla de
+			// "Sigue leyendo" en Inicio con la suya propia y la pisaría con
+			// una petición AJAX que no le corresponde a esa página.
 			wp_localize_script(
 				'mgp-catalogo',
 				'mgpBiblioteca',
 				array(
 					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 					'nonce'   => wp_create_nonce( 'mgp_biblioteca_nonce' ),
+					'pagina'  => is_page( 'catalogo' ) ? 'catalogo' : ( is_page( 'inicio' ) ? 'inicio' : ( is_page( 'mis-libros' ) ? 'mis-libros' : '' ) ),
 				)
 			);
 

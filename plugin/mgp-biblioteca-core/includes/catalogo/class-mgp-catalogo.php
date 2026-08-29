@@ -4,8 +4,9 @@
  *
  * Endpoint AJAX que conecta los chips de filtro y el buscador de la página
  * /catalogo/ (ya diseñados en Elementor) con los libros reales. Devuelve
- * HTML ya armado con las mismas clases CSS del diseño (g-mgp-book-card,
- * g-mgp-tag, etc.) para no tocar el diseño, solo llenarlo con datos.
+ * HTML ya armado con las mismas clases CSS del diseño real (mgp-book-card,
+ * mgp-tag, etc. — sin prefijo "g-", ver nota de v0.5.1 en readme.txt) para
+ * no tocar el diseño, solo llenarlo con datos.
  *
  * @package MGP_Biblioteca_Core
  */
@@ -73,7 +74,7 @@ class MGP_Catalogo {
 		$consulta = new WP_Query( $argumentos );
 
 		if ( ! $consulta->have_posts() ) {
-			return '<p class="g-mgp-empty">' . esc_html__( 'No se encontraron libros con ese filtro.', 'mgp-biblioteca' ) . '</p>';
+			return '<p class="mgp-page-sub">' . esc_html__( 'No se encontraron libros con ese filtro.', 'mgp-biblioteca' ) . '</p>';
 		}
 
 		ob_start();
@@ -84,5 +85,28 @@ class MGP_Catalogo {
 		wp_reset_postdata();
 
 		return ob_get_clean();
+	}
+
+	/**
+	 * Slug de taxonomía -> clase CSS global de color para el "chip" de
+	 * categoría sobre la portada (mgp-tag-comp, mgp-tag-conta...). Estas
+	 * clases con color viven en Elementor (Clases globales), no en este
+	 * plugin — si en el futuro se agrega una carrera técnica nueva, hay que
+	 * (1) sumar su entrada aquí y (2) crear la clase global mgp-tag-{codigo}
+	 * en Elementor con un color propio, o el tag se verá sin color (solo la
+	 * forma base de mgp-tag, sin fondo).
+	 *
+	 * "mecanica-de-produccion" -> mgp-tag-mec: la clase todavía NO existe en
+	 * Elementor (no se creó color para Mecánica en el diseño original,
+	 * solo para Computación y Contabilidad) — ver MEMORIA.md §17.
+	 */
+	public static function clase_tag_categoria( string $slug ): string {
+		$mapa = array(
+			'computacion-e-informatica' => 'mgp-tag-comp',
+			'contabilidad'              => 'mgp-tag-conta',
+			'mecanica-de-produccion'    => 'mgp-tag-mec',
+		);
+
+		return $mapa[ $slug ] ?? '';
 	}
 }

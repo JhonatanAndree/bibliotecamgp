@@ -1,7 +1,8 @@
 <?php
 /**
  * Template part: una tarjeta de libro, reutilizando EXACTAMENTE las clases
- * CSS del diseño Elementor ya aprobado (g-mgp-book-card, g-mgp-tag, etc.).
+ * CSS del diseño Elementor ya aprobado (mgp-book-card, mgp-tag, etc. — sin
+ * prefijo "g-", ver MEMORIA.md §17).
  * Este archivo solo imprime HTML — cero lógica de negocio aquí a propósito,
  * así el diseñador puede tocarlo sin entender PHP de backend.
  *
@@ -16,37 +17,38 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$libro_id  = get_the_ID();
-$autor     = get_post_meta( $libro_id, '_mgp_autor', true );
-$terminos  = get_the_terms( $libro_id, 'categoria_tecnica' );
-$categoria = ( $terminos && ! is_wp_error( $terminos ) ) ? $terminos[0] : null;
+$libro_id       = get_the_ID();
+$autor          = get_post_meta( $libro_id, '_mgp_autor', true );
+$terminos       = get_the_terms( $libro_id, 'categoria_tecnica' );
+$categoria      = ( $terminos && ! is_wp_error( $terminos ) ) ? $terminos[0] : null;
+$clase_tag      = $categoria ? MGP_Catalogo::clase_tag_categoria( $categoria->slug ) : '';
 ?>
-<div class="g-mgp-card-slot">
-	<div class="g-mgp-book-card">
-		<div class="g-mgp-book-cover">
+<div class="mgp-card-slot">
+	<div class="mgp-book-card">
+		<div class="mgp-book-cover">
 			<?php if ( has_post_thumbnail() ) : ?>
 				<?php the_post_thumbnail( 'medium', array( 'loading' => 'lazy' ) ); ?>
 			<?php else : ?>
-				<span class="g-mgp-book-cover-label"><?php esc_html_e( 'portada pendiente', 'mgp-biblioteca' ); ?></span>
+				<span class="mgp-book-cover-label"><?php esc_html_e( 'portada pendiente', 'mgp-biblioteca' ); ?></span>
 			<?php endif; ?>
 		</div>
 
 		<?php if ( $categoria ) : ?>
-			<span class="g-mgp-tag g-mgp-tag-<?php echo esc_attr( sanitize_html_class( $categoria->slug ) ); ?>">
+			<span class="mgp-tag<?php echo $clase_tag ? ' ' . esc_attr( $clase_tag ) : ''; ?>">
 				<?php echo esc_html( $categoria->name ); ?>
 			</span>
 		<?php endif; ?>
 
-		<div class="g-mgp-book-meta">
-			<h3 class="g-mgp-book-title"><?php the_title(); ?></h3>
-			<p class="g-mgp-book-author"><?php echo esc_html( $autor ); ?></p>
+		<div class="mgp-book-meta">
+			<h3 class="mgp-book-title"><?php the_title(); ?></h3>
+			<p class="mgp-book-author"><?php echo esc_html( $autor ); ?></p>
 		</div>
 
-		<div class="g-mgp-btn-row">
-			<a class="g-mgp-btn g-mgp-btn-primary" href="<?php echo esc_url( home_url( '/leer/' . $libro_id . '/' ) ); ?>">
+		<div class="mgp-btn-row">
+			<a class="mgp-btn mgp-btn-primary" href="<?php echo esc_url( home_url( '/leer/' . $libro_id . '/' ) ); ?>">
 				<?php esc_html_e( 'Leer', 'mgp-biblioteca' ); ?>
 			</a>
-			<button type="button" class="g-mgp-btn g-mgp-btn-ghost mgp-btn-guardar" data-libro-id="<?php echo esc_attr( $libro_id ); ?>">
+			<button type="button" class="mgp-btn mgp-btn-ghost mgp-btn-guardar" data-libro-id="<?php echo esc_attr( $libro_id ); ?>">
 				<?php esc_html_e( 'Guardar', 'mgp-biblioteca' ); ?>
 			</button>
 		</div>

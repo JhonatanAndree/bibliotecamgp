@@ -651,3 +651,127 @@ primer libro real para ver resultados reales en vez del mensaje de
 - `mgp-biblioteca-core.php` (versión 0.5.0)
 - `readme.txt` (changelog)
 
+## 17. Bug real descubierto (prefijo "g-" nunca existió) + página Inicio con datos reales + caída de producción y recuperación (v0.5.1, 29/08/2026)
+
+**El hallazgo**: al preparar el cableado de Inicio, se necesitaba saber
+qué clases CSS reales usa esa página para las tarjetas de "Sigue
+leyendo" — así se descubrió, comparando contra el CSS que Elementor
+genera EN VIVO (`wp-content/uploads/elementor/css/global-*.css`,
+descargado y grepeado directamente vía `wp_remote_get`), que **el
+prefijo "g-" que el plugin viene usando desde la v0.1.0 en las clases
+del catálogo (g-mgp-book-card, g-mgp-tag, g-mgp-row-wrap,
+g-mgp-search-slot, etc.) NUNCA existió en el diseño real de Elementor**.
+Las clases globales reales del sistema de diseño "Biblioteca MGP
+Nocturna" son `mgp-*` a secas — confirmado grepeando CADA hoja de
+estilo Elementor que carga tanto /catalogo/ como /inicio/
+(`global-46-frontend-desktop.css`, `global-97-frontend-desktop.css`,
+`post-*.css`): cero coincidencias de "g-mgp" en ningún lado, decenas de
+reglas reales para `.mgp-book-card`, `.mgp-tag`, `.mgp-tag-comp`,
+`.mgp-tag-conta`, `.mgp-btn-primary`, `.mgp-row-wrap`,
+`.mgp-search-slot`, `.mgp-progress-fill`, etc.
+
+Esto significa que el catálogo, desde que existe (v0.1.0), estuvo
+imprimiendo tarjetas con clases sin ningún CSS asociado — se hubieran
+visto completamente sin estilo (sin tarjeta, sin colores, sin
+distribución) en cuanto hubiera habido libros reales que mostrar. No se
+notó antes porque nunca hubo libros reales en el catálogo hasta ahora.
+También significa que las instrucciones dadas al usuario en las
+secciones §15 y §16 de instalar `g-mgp-row-wrap` / `g-mgp-search-slot`
+en Elementor fueron un error mío — deben corregirse a `mgp-row-wrap` /
+`mgp-search-slot` (el usuario aún no ha hecho este cambio en Elementor
+al cierre de esta sección; queda pendiente).
+
+**Corrección aplicada (código)**:
+- `template-tarjeta-libro.php`: todas las clases `g-mgp-*` → `mgp-*`.
+- Nuevo método estático `MGP_Catalogo::clase_tag_categoria( $slug )`:
+  mapea el slug de la taxonomía a la clase de color real
+  (`computacion-e-informatica` → `mgp-tag-comp`, `contabilidad` →
+  `mgp-tag-conta`). **Mecánica de producción no tiene clase de color
+  todavía** (`mgp-tag-mec` — nunca se creó en Elementor, solo existen
+  variantes para Computación y Contabilidad porque esas fueron las
+  únicas categorías con tarjetas de muestra armadas a mano). Pendiente:
+  el usuario debe crear la Clase global `mgp-tag-mec` en Elementor con
+  un color propio (mismo patrón que las otras dos) o esas tarjetas se
+  verán con la etiqueta sin color de fondo.
+- `class-mgp-catalogo.php`: el mensaje de "sin resultados" usaba
+  `g-mgp-empty` (tampoco existía) → ahora usa `mgp-page-sub` (clase real
+  de texto atenuado, ya definida en el sistema).
+- **Bug adicional encontrado de paso**: el botón "Guardar" de las
+  tarjetas nunca tuvo JavaScript enganchado — existía el endpoint AJAX
+  (`MGP_Usuario::alternar_guardado()`, desde v0.1.0) pero nada en el
+  frontend lo llamaba. Corregido: `mgp-catalogo.js` ahora escucha clics
+  delegados en `document` sobre `.mgp-btn-guardar`.
+- `mgp-catalogo.js` recibe un dato nuevo localizado desde PHP,
+  `mgpBiblioteca.pagina` (calculado con `is_page()` en
+  `class-mgp-loader.php`), porque Catálogo e Inicio comparten la MISMA
+  clase `mgp-row-wrap` para su grilla de tarjetas — sin este dato, el
+  script del catálogo se activaría también en Inicio y pisaría "Sigue
+  leyendo" con una petición AJAX de filtrado que no le corresponde a
+  esa página.
+
+**Página Inicio con datos reales**: nueva clase `MGP_Inicio`
+(`includes/inicio/class-mgp-inicio.php`), registra dos shortcodes:
+- `[mgp_saludo]` — imprime `<div class="mgp-stack-xs"><h1
+  class="mgp-page-title">Hola, {nombre}</h1><p
+  class="mgp-page-sub">...</p></div>`, con el nombre de pila real del
+  usuario logueado (`first_name`, o `display_name` si no lo cargó).
+- `[mgp_sigue_leyendo]` — recorre TODO el user meta del usuario de una
+  sola vez (`get_user_meta( $uid )`, sin key), filtra las claves
+  `mgp_progreso_libro_{id}` con porcentaje entre 1 y 99 (ni sin
+  empezar, ni terminado), descarta libros borrados/despublicados,
+  ordena por `actualizado` descendente, limita a 6, e imprime tarjetas
+  con la misma base visual del catálogo (`mgp-book-card`) más la barra
+  de progreso real (`mgp-progress`, `mgp-progress-track`,
+  `mgp-progress-fill` con `style="width:{porcentaje}%"`,
+  `mgp-progress-label` con el texto "Vas por el X%"). Si no hay libros
+  en progreso, muestra un mensaje con link al catálogo en vez de una
+  grilla vacía.
+
+**Instrucciones pendientes para el usuario en Elementor** (página
+Inicio): borrar los widgets de saludo y la fila de tarjetas de muestra
+existentes, y en su lugar agregar DOS widgets "Shortcode" (Elementor
+Pro) con `[mgp_saludo]` y `[mgp_sigue_leyendo]` respectivamente. También
+falta corregir en la página Catálogo ya publicada: renombrar la clase
+del contenedor de tarjetas de `g-mgp-row-wrap` a `mgp-row-wrap`, y la
+del envoltorio del buscador de `g-mgp-search-slot` a `mgp-search-slot`
+(las clases del chip, basadas en atributos personalizados, no cambian).
+
+**Incidente de producción durante el despliegue**: a mitad del
+despliegue de v0.5.1, justo después de subir `class-mgp-loader.php`
+(que ya agregaba el `require_once` de `includes/inicio/class-mgp-inicio.php`)
+pero ANTES de poder subir ese archivo nuevo, la conexión con Novamira
+MCP se cortó con un error 502 sostenido de Cloudflare del lado de
+`api.anthropic.com` (no del hosting del sitio) durante cerca de 25
+minutos. Con el `require_once` apuntando a un archivo que aún no
+existía en el servidor, **el sitio completo cayó con un error fatal de
+PHP** ("Ha habido un error crítico en esta web") para todos los
+visitantes, confirmado por el usuario con captura de pantalla.
+Solución de emergencia: se le pidió al usuario entrar por el
+administrador de archivos de su hosting y comentar manualmente las dos
+líneas del `require_once`/instanciación de `MGP_Inicio` en
+`class-mgp-loader.php` — el sitio volvió de inmediato. En cuanto la
+conexión con Novamira se restableció, se completó el despliegue (subida
+del archivo faltante primero, y recién al final la reactivación de esas
+dos líneas en el loader) y se verificó en vivo que /inicio/, /catalogo/
+y /login/ responden 200 sin errores.
+
+**Lección para el futuro**: cuando un cambio de código introduce una
+dependencia entre archivos (un `require_once` a un archivo nuevo), el
+archivo nuevo debe subirse ANTES que el archivo que lo referencia,
+nunca al revés — así una interrupción a mitad de despliegue deja el
+sitio en un estado roto en vez de uno simplemente desactualizado. Esta
+vez se hizo en el orden incorrecto (loader primero) y causó una caída
+real evitable.
+
+**Archivos modificados/creados en v0.5.1**:
+- `includes/catalogo/template-tarjeta-libro.php` (clases corregidas)
+- `includes/catalogo/class-mgp-catalogo.php` (clases corregidas +
+  `clase_tag_categoria()`)
+- `includes/inicio/class-mgp-inicio.php` (NUEVO)
+- `includes/class-mgp-loader.php` (registra `MGP_Inicio`, agrega
+  `pagina` al script localizado)
+- `assets/js/mgp-catalogo.js` (selectores `mgp-*`, gate por página,
+  handler del botón Guardar)
+- `mgp-biblioteca-core.php` (versión 0.5.1)
+- `readme.txt` (changelog)
+

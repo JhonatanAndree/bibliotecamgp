@@ -3,7 +3,7 @@ Contributors: ti-mgp
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.5.0
+Stable tag: 0.5.1
 License: GPLv2 or later
 
 Motor de datos de la biblioteca virtual del IESTP Manuel Gonzales Prada.
@@ -13,6 +13,33 @@ en biblioteca.mgp.edu.pe. Depende de DearFlip Lite (lector) y de Members
 (el plugin verifica su presencia antes de usarlos).
 
 == Registro de cambios ==
+
+= 0.5.1 =
+* Fix importante: las clases CSS que el plugin imprimía en las tarjetas
+  del catálogo (g-mgp-book-card, g-mgp-tag, g-mgp-btn-row, etc.) tenían
+  un prefijo "g-" que NUNCA existió en el diseño real de Elementor — se
+  verificó contra el CSS generado en vivo y el prefijo correcto es
+  "mgp-" a secas (mgp-book-card, mgp-tag...), desde la v0.1.0. Corregido
+  en template-tarjeta-libro.php. El contenedor del catálogo
+  (antes "g-mgp-row-wrap") y el buscador (antes "g-mgp-search-slot")
+  también deben renombrarse a mgp-row-wrap / mgp-search-slot en
+  Elementor — ver MEMORIA.md §17 para el detalle completo.
+* Nuevo: shortcodes [mgp_saludo] y [mgp_sigue_leyendo] para la página
+  Inicio — saludo con el nombre real del estudiante y su lista real de
+  libros en progreso (antes: contenido de muestra hardcodeado en
+  Elementor). Reutilizan las mismas clases visuales del catálogo más
+  la barra de progreso (mgp-progress-*).
+* Fix: el botón "Guardar" de las tarjetas de libro no tenía ningún
+  JavaScript enganchado (no hacía nada al hacer clic) desde que se creó
+  — ahora mgp-catalogo.js escucha clics delegados en document sobre
+  .mgp-btn-guardar y llama al endpoint AJAX mgp_guardar_libro que ya
+  existía en MGP_Usuario desde la v0.1.0 pero nunca se conectó al
+  frontend.
+* Cambio: mgp-catalogo.js ahora recibe el dato "pagina" (catálogo,
+  inicio o mis-libros) vía wp_localize_script, porque catálogo e inicio
+  comparten la misma clase mgp-row-wrap para su grilla — sin esto, el
+  JS del catálogo activaría su AJAX de filtrado también en Inicio y
+  pisaría la lista de "Sigue leyendo".
 
 = 0.5.0 =
 * Cambio: con Elementor Pro ya instalado en el sitio, los chips de

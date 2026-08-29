@@ -1,14 +1,9 @@
 # Ruta de implementación — Biblioteca Virtual MGP
 
-Estado: **plugin propio v0.5.1. Página Login terminada y verificada en
-vivo. Página Catálogo cableada, pero con 2 clases pendientes de
-corregir en Elementor (ver Fase 2). Página Inicio: backend listo
-(shortcodes `[mgp_saludo]` y `[mgp_sigue_leyendo]`), falta que el
-usuario los coloque en Elementor. Falta subir el primer libro real.
-Bug real corregido: el prefijo "g-" en las clases CSS del catálogo
-nunca existió en el diseño real de Elementor (era "mgp-" a secas desde
-la v0.1.0) — ver MEMORIA.md §17.** Ver MEMORIA.md §10-§17 para el
-detalle de bugs corregidos y decisiones tomadas.
+Estado: **plugin propio v0.5.1. Páginas Login, Catálogo e Inicio
+terminadas y verificadas en vivo. Siguiente: página Mis libros, luego
+empezar a subir libros reales (29/08/2026).** Ver MEMORIA.md §10-§17
+para el detalle de bugs corregidos y decisiones tomadas.
 
 ## Fase 0 — Hecho
 - Sitio Elementor diseñado y publicado en biblioteca.mgp.edu.pe (fuera de
@@ -48,20 +43,24 @@ detalle de bugs corregidos y decisiones tomadas.
       Pro — chips con atributo personalizado `data-mgp-categoria`
       (slugs: `todos`, `computacion-e-informatica`, `contabilidad`,
       `mecanica-de-produccion`) — ver MEMORIA.md §16.
-- [ ] **Página Catálogo — pendiente en Elementor**: renombrar 2 clases
-      CSS que quedaron con el prefijo "g-" incorrecto — contenedor de
-      tarjetas `g-mgp-row-wrap` → `mgp-row-wrap`, envoltorio del
-      buscador `g-mgp-search-slot` → `mgp-search-slot`. Los chips
-      (atributo `data-mgp-categoria`) NO se tocan, están bien. Ver
-      MEMORIA.md §17.
+- [x] **Página Catálogo — clases corregidas en Elementor**: contenedor
+      de tarjetas `mgp-row-wrap` y envoltorio del buscador
+      `mgp-search-slot`, ambas asignadas como clases GLOBALES reales
+      (ya no como clases locales con el prefijo "g-" incorrecto).
+      Verificado en vivo: 0 rastros de `g-mgp`, atributo
+      `data-mgp-categoria` intacto en los 4 chips. Ver MEMORIA.md §17.
 - [x] **Página Inicio — backend (v0.5.1)**: shortcodes
       `[mgp_saludo]` (nombre real del usuario logueado) y
       `[mgp_sigue_leyendo]` (libros en progreso reales, con barra de
       avance) reemplazan el "Hola, Renzo" y las tarjetas de muestra
       hardcodeadas — ver MEMORIA.md §17.
-- [ ] **Página Inicio — pendiente en Elementor**: borrar el saludo de
-      muestra y la fila "Sigue leyendo" de muestra; agregar dos widgets
-      "Shortcode" con `[mgp_saludo]` y `[mgp_sigue_leyendo]`.
+- [x] **Página Inicio — colocada en Elementor y verificada en vivo**:
+      widgets Shortcode con `[mgp_saludo]` y `[mgp_sigue_leyendo]`
+      reemplazan el saludo y la fila de muestra. Prueba con libro y
+      progreso reales (creados y borrados como datos temporales):
+      saludo con nombre real, tarjeta con categoría con color, barra
+      de progreso real (42%), botones Leer/Guardar funcionales — sin
+      rastro de `g-mgp`. 29/08/2026.
 - [ ] Opcional/cosmético: crear la clase global de Elementor
       `mgp-tag-mec` (con su propio color, igual que `mgp-tag-comp` /
       `mgp-tag-conta`) para que la etiqueta de Mecánica de producción

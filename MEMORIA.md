@@ -586,3 +586,68 @@ suba al menos uno.
 - `mgp-biblioteca-core.php` (versión 0.4.2)
 - `readme.txt` (changelog)
 
+## 16. Elementor Pro instalado — vuelta a atributos personalizados, catálogo cableado y verificado en vivo (v0.5.0, 29/08/2026)
+
+El usuario decidió instalar **Elementor Pro** en vez de seguir con el
+workaround de clases CSS de v0.4.2 (le pareció más simple no tener que
+reemplazar/rehacer nada más adelante). Confirmado en vivo vía
+`wp plugin list --status=active`: `elementor-pro` 4.2.2 activo junto a
+`elementor` 4.2.3.
+
+Con Pro disponible, el panel **Avanzado → Atributos personalizados**
+(campo "Attributes" en la UI en inglés de esta instalación) vuelve a
+estar disponible, así que se revirtió el JS a su diseño original:
+`assets/js/mgp-catalogo.js` ya no usa `MAPA_CLASE_A_SLUG` ni las clases
+`cat-*`/`g-mgp-cat-card` — ahora los chips se seleccionan con
+`document.querySelectorAll('[data-mgp-categoria]')` y el slug se lee
+directo de `chip.getAttribute('data-mgp-categoria')`. El contenedor de
+tarjetas (`g-mgp-row-wrap`) y el envoltorio del buscador
+(`g-mgp-search-slot`) se mantienen como clases CSS igual que antes —
+esas dos nunca dependieron de Elementor Pro.
+
+**Error real del usuario durante el cableado** (documentado porque es
+fácil repetirlo): la primera vez, escribió `data-mgp-categoria` en el
+campo **Clases** en vez de en **Atributos personalizados**/"Attributes"
+— son dos secciones distintas del panel Avanzado. El resultado fue
+`class="data-mgp-categoria e-button-base"` en vez de un atributo real,
+así que el JS no encontraba ningún chip. Se detectó revisando el HTML
+en vivo (`data-mgp-categoria: ` vacío pese a que `g-mgp-row-wrap` y
+`g-mgp-search-slot` sí aparecían) y se corrigió pidiendo captura del
+panel; el usuario lo arregló usando el campo correcto ("Attributes",
+con par clave|valor separado por `=`).
+
+**Verificación en vivo, paso a paso** (usuario de prueba temporal,
+creado y borrado igual que en verificaciones anteriores):
+1. Primer intento de verificación con `wp_remote_get` SIN cookies de
+   sesión devolvió la página de login (0 coincidencias de
+   `g-mgp-row-wrap`, `g-mgp-search-slot`, `data-mgp-categoria`) — esto
+   es el comportamiento CORRECTO de `MGP_Acceso` (el sitio entero exige
+   login), no un bug. Hay que recordar siempre pasar cookies de un
+   usuario autenticado al probar cualquier página del sitio.
+2. Con cookie de sesión válida: `g-mgp-row-wrap` SI, `g-mgp-search-slot`
+   SI (con el `<input>` dentro, confirmado por contexto HTML), pero
+   `data-mgp-categoria` vacío — así se detectó el error de campo
+   descrito arriba.
+3. Tras la corrección del usuario: los 4 chips devuelven
+   `data-mgp-categoria="todos|computacion-e-informatica|contabilidad|mecanica-de-produccion"`
+   en el orden correcto.
+4. Prueba funcional del AJAX real (`admin-ajax.php`, acción
+   `mgp_filtrar_catalogo`, nonce extraído de la misma carga de página
+   autenticada): filtrar por `contabilidad` devolvió
+   `{"success":true,"data":{"html":"<p class=\"g-mgp-empty\">No se
+   encontraron libros con ese filtro.</p>","cache":false}}` — respuesta
+   correcta, es SOLO porque el CPT `libro` todavía no tiene ningún
+   registro real (las tarjetas de muestra visibles en el catálogo son
+   contenido de Elementor hecho a mano, no vienen de la base de datos).
+
+**Conclusión**: la página Catálogo queda completamente cableada y
+verificada en producción — grilla, chips y buscador. Falta subir el
+primer libro real para ver resultados reales en vez del mensaje de
+"vacío".
+
+**Archivos modificados en v0.5.0**:
+- `assets/js/mgp-catalogo.js` (vuelta a atributos personalizados,
+  eliminado el mapa de clases del workaround de v0.4.2)
+- `mgp-biblioteca-core.php` (versión 0.5.0)
+- `readme.txt` (changelog)
+

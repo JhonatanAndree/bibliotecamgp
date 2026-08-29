@@ -1,9 +1,10 @@
 # Ruta de implementación — Biblioteca Virtual MGP
 
-Estado: **plugin propio v0.4.1. Página Login terminada y verificada en
-vivo. Categorías técnicas creadas. Catálogo con carga automática,
-pendiente de cablear en Elementor (28/08/2026).** Ver MEMORIA.md
-§10-§14 para el detalle de bugs corregidos y decisiones tomadas.
+Estado: **plugin propio v0.5.0. Página Login y página Catálogo
+terminadas y verificadas en vivo (Elementor Pro instalado). Falta subir
+el primer libro real. Siguiente: página Inicio (29/08/2026).** Ver
+MEMORIA.md §10-§16 para el detalle de bugs corregidos y decisiones
+tomadas.
 
 ## Fase 0 — Hecho
 - Sitio Elementor diseñado y publicado en biblioteca.mgp.edu.pe (fuera de
@@ -39,16 +40,18 @@ pendiente de cablear en Elementor (28/08/2026).** Ver MEMORIA.md
       existían como decisión, no como datos) — ver MEMORIA.md §14.
 - [x] Catálogo: carga automática de libros reales al abrir la página
       (antes solo cargaba tras el primer filtro/búsqueda) — v0.4.1.
-- [ ] **Página Catálogo**: falta que el usuario cablee en Elementor
-      (widget HTML, versión gratuita) el contenedor `g-mgp-row-wrap`,
-      los chips `data-mgp-categoria` (slugs: `computacion-e-informatica`,
-      `contabilidad`, `mecanica-de-produccion`, + `todos`), y el
-      buscador en `.g-mgp-search-slot`.
+- [x] **Página Catálogo**: cableada y verificada en vivo con Elementor
+      Pro — contenedor `g-mgp-row-wrap`, chips con atributo
+      personalizado `data-mgp-categoria` (slugs: `todos`,
+      `computacion-e-informatica`, `contabilidad`,
+      `mecanica-de-produccion`) y buscador (widget HTML) en
+      `.g-mgp-search-slot` — ver MEMORIA.md §16.
 - [ ] **Página Inicio**: reemplazar el saludo y los "Sigue leyendo" de
       muestra (hardcodeados) por datos reales del usuario logueado.
 - [ ] **Página Mis libros**: sin revisar todavía.
 - [ ] Subir un primer libro real de prueba (Libros → Añadir nuevo) para
-      validar el catálogo con datos reales en cuanto se cablee esa página.
+      validar el catálogo con datos reales (ya cableado, solo falta
+      contenido).
 - [ ] **Empezar la carga real de hasta 200 libros**, uno por uno desde el
       admin (decisión confirmada — sin importador CSV).
 

@@ -5,7 +5,7 @@
  * Description:       Motor de datos y funciones de la biblioteca virtual del IESTP Manuel Gonzales Prada:
  *                     catálogo (CPT + taxonomía), lector de PDF protegido, guardado/progreso de lectura
  *                     y filtros del catálogo. Diseñado para hosting con recursos limitados (~1GB RAM).
- * Version:           0.4.2
+ * Version:           0.5.0
  * Requires PHP:      8.0
  * Requires at least: 6.4
  * Author:            TI — IESTP Manuel Gonzales Prada
@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 // Constantes del plugin. Se usan en todo el código en vez de rutas/URLs
 // escritas a mano, así un cambio de ubicación del plugin no rompe nada.
 // ---------------------------------------------------------------------------
-define( 'MGP_BIB_VERSION', '0.4.2' );
+define( 'MGP_BIB_VERSION', '0.5.0' );
 define( 'MGP_BIB_PATH', plugin_dir_path( __FILE__ ) );
 define( 'MGP_BIB_URL', plugin_dir_url( __FILE__ ) );
 define( 'MGP_BIB_BASENAME', plugin_basename( __FILE__ ) );

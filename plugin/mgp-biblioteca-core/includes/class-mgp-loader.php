@@ -82,6 +82,10 @@ final class MGP_Loader {
 		require_once MGP_BIB_PATH . 'includes/inicio/class-mgp-inicio.php';
 		( new MGP_Inicio() )->registrar_hooks();
 
+		// --- Página Mis libros: guardados + en progreso, datos reales ----
+		require_once MGP_BIB_PATH . 'includes/mis-libros/class-mgp-mis-libros.php';
+		( new MGP_Mis_Libros() )->registrar_hooks();
+
 		// --- Página individual del libro (plantilla + lector DearFlip) ---
 		require_once MGP_BIB_PATH . 'includes/plantillas/class-mgp-plantilla-single-libro.php';
 		( new MGP_Plantilla_Single_Libro() )->registrar_hooks();
@@ -140,15 +144,17 @@ final class MGP_Loader {
 				)
 			);
 
-			if ( is_page( 'mis-libros' ) ) {
-				wp_enqueue_script(
-					'mgp-lector',
-					MGP_BIB_URL . 'assets/js/mgp-lector.js',
-					array(),
-					MGP_BIB_VERSION,
-					true
-				);
-			}
+			// NOTA (ver MEMORIA.md §18): antes había aquí un enqueue de
+			// 'mgp-lector.js' — archivo que nunca llegó a crearse, y que
+			// además estaba mal ubicado (esta condición es la página
+			// "mis-libros", una vitrina de tarjetas; el lector DearFlip vive
+			// en la página individual del libro, templates/single-libro.php,
+			// vía MGP_Plantilla_Single_Libro). Se quitó para no pedirle al
+			// navegador un archivo que da 404. El registro real de progreso
+			// de lectura (MGP_Usuario::actualizar_progreso()) sigue sin
+			// tener ningún JS que lo dispare — pendiente, requiere revisar
+			// primero la API de eventos real de DearFlip Lite antes de
+			// escribir ese enganche a ciegas.
 		}
 
 		// La página de login solo necesita su propio CSS: formulario de

@@ -1,9 +1,13 @@
 # Ruta de implementación — Biblioteca Virtual MGP
 
-Estado: **plugin propio v0.5.1. Páginas Login, Catálogo e Inicio
-terminadas y verificadas en vivo. Siguiente: página Mis libros, luego
-empezar a subir libros reales (29/08/2026).** Ver MEMORIA.md §10-§17
-para el detalle de bugs corregidos y decisiones tomadas.
+Estado: **plugin propio v0.5.2. Login, Catálogo e Inicio terminadas y
+verificadas en vivo. Mis libros: backend listo, falta que el usuario
+coloque los 2 shortcodes en Elementor. Pendiente real detectado: el
+progreso de lectura nunca se registra (falta enganchar el lector
+DearFlip al endpoint de progreso) — ver MEMORIA.md §18. Siguiente tras
+Mis libros: empezar a subir libros reales (29/08/2026).** Ver
+MEMORIA.md §10-§18 para el detalle de bugs corregidos y decisiones
+tomadas.
 
 ## Fase 0 — Hecho
 - Sitio Elementor diseñado y publicado en biblioteca.mgp.edu.pe (fuera de
@@ -66,10 +70,25 @@ para el detalle de bugs corregidos y decisiones tomadas.
       `mgp-tag-conta`) para que la etiqueta de Mecánica de producción
       tenga color — sin esto el libro se ve igual, solo sin color en el
       tag.
-- [ ] **Página Mis libros**: sin revisar todavía. Nota: `class-mgp-loader.php`
-      ya referencia un archivo `mgp-lector.js` para esta página que
-      todavía no existe en `assets/js/` — pendiente crearlo cuando se
-      trabaje esta página.
+- [x] **Página Mis libros — backend (v0.5.2)**: shortcodes
+      `[mgp_guardados]` (todos los libros guardados, más recientes
+      primero) y `[mgp_en_progreso]` (todos los libros con progreso
+      real 1-99%, más recientes primero, sin el tope de 6 que tiene
+      Inicio) — probados con `do_shortcode()` y datos reales
+      temporales. Ver MEMORIA.md §18.
+- [x] Fix: se quitó el enqueue roto de `mgp-lector.js` (archivo que
+      nunca se creó, en la página equivocada) — ver MEMORIA.md §18.
+- [ ] **Página Mis libros — pendiente en Elementor**: agregar dos
+      widgets "Shortcode" con `[mgp_guardados]` y `[mgp_en_progreso]`
+      (sugerido: un encabezado de texto antes de cada uno, "Guardados"
+      / "En progreso").
+- [ ] **Pendiente real de backend (no bloquea Mis libros)**: el
+      progreso de lectura nunca se registra — falta el JS que escuche
+      los eventos de cambio de página del lector DearFlip en la página
+      individual del libro y llame al endpoint AJAX ya existente
+      (`mgp_actualizar_progreso`). Requiere revisar primero la API de
+      eventos real de DearFlip Lite antes de construirlo. Ver
+      MEMORIA.md §18.
 - [ ] Subir un primer libro real de prueba (Libros → Añadir nuevo) para
       validar el catálogo con datos reales (ya cableado, solo falta
       contenido).

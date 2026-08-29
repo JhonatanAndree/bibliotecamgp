@@ -3,7 +3,7 @@ Contributors: ti-mgp
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.5.1
+Stable tag: 0.5.2
 License: GPLv2 or later
 
 Motor de datos de la biblioteca virtual del IESTP Manuel Gonzales Prada.
@@ -13,6 +13,26 @@ en biblioteca.mgp.edu.pe. Depende de DearFlip Lite (lector) y de Members
 (el plugin verifica su presencia antes de usarlos).
 
 == Registro de cambios ==
+
+= 0.5.2 =
+* Nuevo: shortcodes [mgp_guardados] y [mgp_en_progreso] para la página
+  Mis libros — el primero lista todos los libros que el usuario guardó
+  (botón "Guardar" del catálogo), el segundo todos sus libros con
+  progreso de lectura real entre 1% y 99%, ambos con lo más reciente
+  primero. A diferencia del "Sigue leyendo" de Inicio (máximo 6), aquí
+  se listan todos — es la página dedicada. Reutilizan las mismas
+  clases visuales reales del catálogo (mgp-book-card, mgp-progress-*,
+  etc.).
+* Fix: se quitó un enqueue de "mgp-lector.js" en la página Mis libros
+  que pedía un archivo que nunca llegó a crearse (404 silencioso en
+  consola) y que además estaba en la página equivocada — el lector
+  vive en la página individual del libro, no en Mis libros.
+* Nota pendiente: el registro real de progreso de lectura
+  (mgp_actualizar_progreso) todavía no tiene ningún JS enganchado a
+  los eventos de paso de página de DearFlip en la página individual
+  del libro — ver MEMORIA.md §18. Sin esto, [mgp_en_progreso] mostrará
+  "no tienes libros en progreso" incluso con libros empezados, hasta
+  que ese enganche se construya.
 
 = 0.5.1 =
 * Fix importante: las clases CSS que el plugin imprimía en las tarjetas

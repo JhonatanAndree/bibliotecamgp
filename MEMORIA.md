@@ -775,3 +775,93 @@ real evitable.
 - `mgp-biblioteca-core.php` (versión 0.5.1)
 - `readme.txt` (changelog)
 
+## 18. v0.5.2 — Página Mis libros: guardados + en progreso, y bug del "mgp-lector.js" fantasma
+
+**Verificación en vivo del milestone anterior**: antes de empezar Mis
+libros se re-verificó Catálogo e Inicio con el usuario ya habiendo
+hecho las correcciones pendientes en Elementor. Resultado: ambas
+páginas 100% correctas — 0 rastros de `g-mgp` en el HTML, atributo
+`data-mgp-categoria` intacto en los 4 chips, `[mgp_saludo]` y
+`[mgp_sigue_leyendo]` renderizando datos reales (se creó y luego borró
+un libro y un progreso de prueba para confirmarlo: saludo con nombre
+real, tarjeta con categoría con color, barra de progreso real al 42%,
+botones Leer/Guardar funcionales).
+
+**Trabajo de esta versión**: nueva clase `MGP_Mis_Libros`
+(`includes/mis-libros/class-mgp-mis-libros.php`) con dos shortcodes,
+mismo patrón que Inicio (`MGP_Inicio`):
+
+- `[mgp_guardados]` — todos los libros que el usuario guardó (botón
+  "Guardar" del catálogo/inicio), más recientes primero (se invierte
+  el array `mgp_libros_guardados`, que WordPress guarda en orden de
+  guardado). Si el libro guardado también tiene progreso de lectura,
+  la tarjeta muestra la barra; si no, la omite (tarjeta "limpia").
+- `[mgp_en_progreso]` — todos los libros con progreso de lectura real
+  entre 1% y 99%, más recientes primero. A diferencia del "Sigue
+  leyendo" de Inicio (tope de 6), aquí se listan TODOS — es la página
+  dedicada a esto.
+
+Ambos shortcodes reutilizan `MGP_Catalogo::clase_tag_categoria()` y las
+mismas clases visuales reales (`mgp-book-card`, `mgp-progress-*`,
+etc.). A diferencia de la tarjeta del catálogo (que siempre arranca en
+estado "Guardar"), acá el botón ya refleja el estado real: si el libro
+está guardado, arranca en "Guardado" con la clase `mgp-btn-guardado`
+— consistente con lo que hace el JS tras un clic exitoso.
+
+**Bug encontrado y corregido: "mgp-lector.js" nunca existió**.
+`class-mgp-loader.php::cargar_assets()` tenía, desde antes de esta
+sesión, un `wp_enqueue_script('mgp-lector', ... 'mgp-lector.js' ...)`
+condicionado a `is_page('mis-libros')`. Dos problemas: (1) ese archivo
+nunca se creó — cada carga de la página Mis libros le pedía al
+navegador un JS que daba 404 en silencio; (2) la ubicación era
+conceptualmente incorrecta — el lector DearFlip no vive en "Mis
+libros" (una vitrina de tarjetas), vive en la página individual del
+libro (`templates/single-libro.php`, vía
+`MGP_Plantilla_Single_Libro`). Se quitó el enqueue roto.
+
+**Hallazgo más importante: el progreso de lectura real nunca se
+registra**. Revisando `templates/single-libro.php` y
+`MGP_Plantilla_Single_Libro::encolar_assets()` se confirmó que la
+página individual del libro solo encola DearFlip (visor) y el CSS
+propio — no hay ningún JS que escuche los eventos de "cambio de
+página" del lector y llame al endpoint AJAX
+`MGP_Usuario::actualizar_progreso()` (que existe y funciona desde la
+v0.1.0, solo que nunca lo llama nadie). Es decir: **ningún estudiante
+ha generado nunca progreso de lectura real**, porque no existe el
+enganche que lo dispara. Decisión tomada: no fabricar ese enganche a
+ciegas sin conocer primero la API real de eventos de DearFlip Lite
+(nombre exacto del evento de cambio de página, si es un evento DOM
+custom, un callback de configuración, o algo que exige revisar su
+documentación/código fuente instalado) — construir esto sin verificar
+arriesga registrar progreso incorrecto o nunca disparar el evento.
+Queda como tarea pendiente explícita, documentada en el código
+(comentario en `cargar_assets()`) y en el changelog de `readme.txt`.
+Los shortcodes de Mis libros e Inicio ya están listos para mostrar ese
+dato en cuanto el enganche exista — no requieren cambios adicionales.
+
+**Verificación**: `php -l` limpio en los 3 archivos tocados, versión
+`0.5.2` confirmada activa en el sitio, `/mis-libros/`, `/catalogo/`
+responden 200. Prueba funcional de los shortcodes con `do_shortcode()`
+usando datos reales temporales (2 libros de prueba: uno guardado con
+25% de progreso, otro solo guardado sin progreso) — confirmado:
+`[mgp_guardados]` lista ambos con lo más reciente primero, botón en
+estado "Guardado", tarjeta con progreso solo cuando corresponde;
+`[mgp_en_progreso]` lista solo el que tiene progreso real. Datos de
+prueba borrados al terminar.
+
+**Pendiente para el usuario en Elementor** — página Mis libros: crear
+(o editar, si ya existe contenido de muestra) dos secciones, cada una
+con un widget "Shortcode": una con `[mgp_guardados]`, otra con
+`[mgp_en_progreso]`. Sugerido: un encabezado de texto "Guardados" antes
+del primero y "En progreso" antes del segundo (mismo patrón visual que
+el resto del sitio, clases `mgp-section`/`mgp-section-title` si ya
+existen como clases globales — si no, un widget de texto normal con el
+estilo de título que se esté usando en el resto del sitio sirve igual).
+
+**Archivos modificados/creados en v0.5.2**:
+- `includes/mis-libros/class-mgp-mis-libros.php` (NUEVO)
+- `includes/class-mgp-loader.php` (registra `MGP_Mis_Libros`, quita el
+  enqueue roto de `mgp-lector.js`)
+- `mgp-biblioteca-core.php` (versión 0.5.2)
+- `readme.txt` (changelog)
+

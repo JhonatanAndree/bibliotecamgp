@@ -96,15 +96,15 @@ class MGP_Catalogo {
 	 * en Elementor con un color propio, o el tag se verá sin color (solo la
 	 * forma base de mgp-tag, sin fondo).
 	 *
-	 * "mecanica-de-produccion" -> mgp-tag-mec: la clase todavía NO existe en
-	 * Elementor (no se creó color para Mecánica en el diseño original,
-	 * solo para Computación y Contabilidad) — ver MEMORIA.md §17.
+	 * "mecanica-de-produccion" -> mgp-tag-meca: la clase SÍ existe en
+	 * Elementor desde el diseño original, con ese nombre exacto (no
+	 * "mgp-tag-mec" como se asumió antes) — ver MEMORIA.md §19.
 	 */
 	public static function clase_tag_categoria( string $slug ): string {
 		$mapa = array(
 			'computacion-e-informatica' => 'mgp-tag-comp',
 			'contabilidad'              => 'mgp-tag-conta',
-			'mecanica-de-produccion'    => 'mgp-tag-mec',
+			'mecanica-de-produccion'    => 'mgp-tag-meca',
 		);
 
 		return $mapa[ $slug ] ?? '';

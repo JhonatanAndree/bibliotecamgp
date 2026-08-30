@@ -1,13 +1,16 @@
 # Ruta de implementación — Biblioteca Virtual MGP
 
-Estado: **plugin propio v0.5.2. Login, Catálogo e Inicio terminadas y
+Estado: **plugin propio v0.5.3. Login, Catálogo e Inicio terminadas y
 verificadas en vivo. Mis libros: backend listo, falta que el usuario
-coloque los 2 shortcodes en Elementor. Pendiente real detectado: el
-progreso de lectura nunca se registra (falta enganchar el lector
-DearFlip al endpoint de progreso) — ver MEMORIA.md §18. Siguiente tras
-Mis libros: empezar a subir libros reales (29/08/2026).** Ver
-MEMORIA.md §10-§18 para el detalle de bugs corregidos y decisiones
-tomadas.
+coloque los 2 shortcodes en Elementor. Bug real corregido: el tag de
+color de "Mecánica de producción" nunca pintaba porque el plugin
+mapeaba a "mgp-tag-mec" en vez de la clase global real "mgp-tag-meca"
+— corregido en código, sin cambios en Elementor — ver MEMORIA.md §19.
+Pendiente real detectado: el progreso de lectura nunca se registra
+(falta enganchar el lector DearFlip al endpoint de progreso) — ver
+MEMORIA.md §18. Siguiente tras Mis libros: empezar a subir libros
+reales (30/08/2026).** Ver MEMORIA.md §10-§19 para el detalle de bugs
+corregidos y decisiones tomadas.
 
 ## Fase 0 — Hecho
 - Sitio Elementor diseñado y publicado en biblioteca.mgp.edu.pe (fuera de
@@ -65,11 +68,12 @@ tomadas.
       saludo con nombre real, tarjeta con categoría con color, barra
       de progreso real (42%), botones Leer/Guardar funcionales — sin
       rastro de `g-mgp`. 29/08/2026.
-- [ ] Opcional/cosmético: crear la clase global de Elementor
-      `mgp-tag-mec` (con su propio color, igual que `mgp-tag-comp` /
-      `mgp-tag-conta`) para que la etiqueta de Mecánica de producción
-      tenga color — sin esto el libro se ve igual, solo sin color en el
-      tag.
+- [x] **Fix (v0.5.3)**: tag de color de "Mecánica de producción" —
+      la clase global `mgp-tag-meca` ya existía en Elementor desde el
+      diseño original (junto a `mgp-tag-comp`/`mgp-tag-conta`); el bug
+      era un typo en el plugin (`clase_tag_categoria()` mapeaba a
+      `mgp-tag-mec`, sin la "a" final). Corregido en código, sin
+      cambios en Elementor. Ver MEMORIA.md §19.
 - [x] **Página Mis libros — backend (v0.5.2)**: shortcodes
       `[mgp_guardados]` (todos los libros guardados, más recientes
       primero) y `[mgp_en_progreso]` (todos los libros con progreso

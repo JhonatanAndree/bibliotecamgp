@@ -3,7 +3,7 @@ Contributors: ti-mgp
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.5.2
+Stable tag: 0.5.3
 License: GPLv2 or later
 
 Motor de datos de la biblioteca virtual del IESTP Manuel Gonzales Prada.
@@ -13,6 +13,14 @@ en biblioteca.mgp.edu.pe. Depende de DearFlip Lite (lector) y de Members
 (el plugin verifica su presencia antes de usarlos).
 
 == Registro de cambios ==
+
+= 0.5.3 =
+* Fix: el tag de color de la categoría "Mecánica de producción" nunca
+  se pintaba porque el plugin mapeaba a la clase CSS "mgp-tag-mec",
+  cuando la clase global real creada en el diseño Elementor original es
+  "mgp-tag-meca" (con "a" final). Corregido el mapeo en
+  MGP_Catalogo::clase_tag_categoria() — no requiere ningún cambio en
+  Elementor. Ver MEMORIA.md §19.
 
 = 0.5.2 =
 * Nuevo: shortcodes [mgp_guardados] y [mgp_en_progreso] para la página

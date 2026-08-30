@@ -865,3 +865,38 @@ estilo de título que se esté usando en el resto del sitio sirve igual).
 - `mgp-biblioteca-core.php` (versión 0.5.2)
 - `readme.txt` (changelog)
 
+## 19. Bug real: mapeo de clase de color para "Mecánica de producción" (v0.5.3)
+
+Al intentar colorear el tag de categoría "Mecánica de producción" (única
+de las 3 carreras sin color desde el diseño original), el usuario creó
+en Elementor una clase local `mgp-tag-mec` y no logró convertirla en
+global (el menú "Convertir en una clase global" no respondía). Antes de
+seguir insistiendo en Elementor, se le pidió abrir **Sistema de diseño →
+Clases** (ícono de gota en la barra superior del editor) para ver la
+lista completa de clases globales reales (103 en total).
+
+Ahí apareció la causa real: la clase global **ya existía** desde el
+diseño original, junto a `mgp-tag-comp` y `mgp-tag-conta`, pero con el
+nombre `mgp-tag-meca` — no `mgp-tag-mec`. El código del plugin
+(`MGP_Catalogo::clase_tag_categoria()`) tenía el nombre mal escrito
+(`mgp-tag-mec`, sin la "a" final), por eso nunca coincidía con ninguna
+clase real y el tag salía sin color. No era un problema de Elementor ni
+del usuario — era un typo en el mapeo PHP.
+
+**Fix**: `clase_tag_categoria()` en
+`includes/catalogo/class-mgp-catalogo.php` corregido para mapear
+`'mecanica-de-produccion' => 'mgp-tag-meca'`. Sin cambios en Elementor
+necesarios — la clase `mgp-tag-mec` local que el usuario creó de prueba
+puede borrarse, no se usa.
+
+**Verificación**: `php -l` limpio, versión `0.5.3` confirmada activa
+(`MGP_BIB_VERSION` y cabecera del plugin coinciden), llamada directa a
+`MGP_Catalogo::clase_tag_categoria('mecanica-de-produccion')` en el
+sitio real devuelve `mgp-tag-meca`, y `template-tarjeta-libro.php`
+confirmado que emite `class="mgp-tag mgp-tag-meca"` en la tarjeta.
+
+**Archivos modificados en v0.5.3**:
+- `includes/catalogo/class-mgp-catalogo.php` (mapeo corregido)
+- `mgp-biblioteca-core.php` (versión 0.5.3)
+- `readme.txt` (changelog)
+

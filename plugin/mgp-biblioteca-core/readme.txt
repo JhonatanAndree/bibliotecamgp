@@ -3,7 +3,7 @@ Contributors: ti-mgp
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.5.3
+Stable tag: 0.5.4
 License: GPLv2 or later
 
 Motor de datos de la biblioteca virtual del IESTP Manuel Gonzales Prada.
@@ -13,6 +13,16 @@ en biblioteca.mgp.edu.pe. Depende de DearFlip Lite (lector) y de Members
 (el plugin verifica su presencia antes de usarlos).
 
 == Registro de cambios ==
+
+= 0.5.4 =
+* Fix importante: el rol "administrator" de WordPress nunca vio el
+  menú "Libros" en wp-admin — el CPT usa capacidades propias
+  (edit_libros, publish_libros, etc.) que solo se le habían concedido
+  al rol "bibliotecario", nunca al administrador del sitio. Nuevo
+  método MGP_Loader::reparar_capacidades_admin() se las da también al
+  administrador (una sola vez, autoreparación en instalaciones ya
+  activas + en la activación para instalaciones nuevas). Ver
+  MEMORIA.md §20.
 
 = 0.5.3 =
 * Fix: el tag de color de la categoría "Mecánica de producción" nunca

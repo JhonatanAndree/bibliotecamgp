@@ -900,3 +900,64 @@ confirmado que emite `class="mgp-tag mgp-tag-meca"` en la tarjeta.
 - `mgp-biblioteca-core.php` (versión 0.5.3)
 - `readme.txt` (changelog)
 
+## 20. Bug real: el administrador no veía el menú "Libros" (v0.5.4)
+
+El usuario subió su primer libro real pero no aparecía ni en Catálogo ni
+en Inicio. Investigando se encontraron DOS problemas distintos, uno
+detrás del otro:
+
+**Problema 1 — el libro se creó con el CPT equivocado.** El usuario lo
+subió desde el menú "DearFlip Books" del plugin DearFlip Lite (su
+propio post type `dflip`, para flipbooks sueltos), no desde nuestro
+CPT `libro`. Confirmado por consulta directa: el post 207 "Python en
+menos de una semana" existe con `post_type = dflip`, y `WP_Query` con
+`post_type => 'libro'` devuelve 0 resultados. Nuestro catálogo e Inicio
+solo leen posts de tipo `libro`, por eso nunca apareció.
+
+**Problema 2 (el real, de fondo) — el propio administrador no puede
+ver el menú "Libros".** Al revisar por qué el usuario terminó en el
+lugar equivocado, se encontró que el menú "Libros" (nuestro CPT) nunca
+apareció en su barra lateral de wp-admin, ni siquiera para su cuenta de
+administrador. Causa: `class-mgp-cpt-libro.php` registra el CPT con
+`capability_type => 'libro'` y `map_meta_cap => true` (necesario para
+que el rol `bibliotecario` funcione con permisos acotados), lo que crea
+capacidades propias (`edit_libros`, `publish_libros`, etc.) en vez de
+reusar `edit_posts`/`publish_posts`. El código solo le daba esas
+capacidades al rol `bibliotecario` (`crear_rol_bibliotecario()`) — el
+rol `administrator` de WordPress **no** las hereda automáticamente por
+ser administrador; hay que concedérselas explícitamente. Sin esas
+capacidades, WordPress simplemente no muestra el menú, sin ningún aviso
+ni error visible. Esto explica por qué el usuario, buscando dónde subir
+un libro, terminó usando el único menú de "libro" que si podía ver:
+el de DearFlip.
+
+**Fix**: nuevo método `MGP_Loader::reparar_capacidades_admin()` que
+agrega todas las capacidades del CPT `libro` al rol `administrator`
+(controlado por la opción `mgp_bib_caps_admin_v1` para ejecutarse una
+sola vez). Enganchado en `admin_init` (autorepara instalaciones ya
+activas, como esta) y también en la activación del plugin (para
+instalaciones nuevas). Aplicado en caliente al servidor de inmediato
+para desbloquear al usuario sin esperar el próximo `wp-admin/`.
+
+**Verificación**: `admin->has_cap('edit_libros')` devuelve `true` en
+el sitio real tras el fix; `php -l` limpio en los 2 archivos; versión
+`0.5.4` confirmada activa (`MGP_BIB_VERSION`); opción
+`mgp_bib_caps_admin_v1` marcada, confirmando que no se repetirá el
+trabajo en cada carga de `/wp-admin/`.
+
+**Pendiente para el usuario**: recrear el libro "Python en menos de
+una semana" desde el menú correcto ("Libros → Añadir nuevo", no
+"DearFlip Books"). El PDF ya subido a la biblioteca de medios (post
+208/209, adjunto) se puede reutilizar seleccionándolo desde el selector
+de medios del meta box "Detalles del libro" — no hace falta volver a
+subir el archivo. El registro `dflip` (post 207) creado por error
+puede enviarse a la papelera desde "DearFlip Books → All Books", no lo
+usa nuestro plugin.
+
+**Archivos modificados en v0.5.4**:
+- `includes/class-mgp-loader.php` (nuevo método
+  `reparar_capacidades_admin()`, enganchado en `admin_init`)
+- `mgp-biblioteca-core.php` (versión 0.5.4, llamada también en
+  activación)
+- `readme.txt` (changelog)
+

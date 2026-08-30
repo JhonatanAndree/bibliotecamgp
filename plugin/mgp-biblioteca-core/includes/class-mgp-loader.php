@@ -96,6 +96,9 @@ final class MGP_Loader {
 
 		// --- Assets (CSS/JS), cargados solo en las páginas que los usan ---
 		add_action( 'wp_enqueue_scripts', array( $this, 'cargar_assets' ) );
+
+		// --- Reparación de capacidades del administrador (ver v0.5.4) ----
+		add_action( 'admin_init', array( $this, 'reparar_capacidades_admin' ) );
 	}
 
 	/**
@@ -196,5 +199,47 @@ final class MGP_Loader {
 				'delete_libros'          => true,
 			)
 		);
+	}
+
+	/**
+	 * Bug real detectado en producción (30/08/2026): el CPT "libro" usa
+	 * capacidades propias (capability_type => 'libro', map_meta_cap =>
+	 * true), pero solo el rol "bibliotecario" las recibía en
+	 * crear_rol_bibliotecario(). El rol "administrator" de WordPress NO
+	 * hereda automáticamente capacidades de un capability_type
+	 * personalizado — por eso el menú "Libros" nunca apareció en
+	 * wp-admin, ni para el propio administrador del sitio. Este método
+	 * las agrega también a "administrator", una sola vez (controlado por
+	 * la opción mgp_bib_caps_admin_v1 para no repetir el trabajo en cada
+	 * carga de /wp-admin/). Ver MEMORIA.md §20.
+	 */
+	public function reparar_capacidades_admin(): void {
+		if ( get_option( 'mgp_bib_caps_admin_v1' ) ) {
+			return;
+		}
+
+		$admin = get_role( 'administrator' );
+		if ( $admin ) {
+			$capacidades = array(
+				'edit_libro',
+				'read_libro',
+				'delete_libro',
+				'edit_libros',
+				'edit_others_libros',
+				'publish_libros',
+				'read_private_libros',
+				'delete_libros',
+				'delete_private_libros',
+				'delete_published_libros',
+				'delete_others_libros',
+				'edit_private_libros',
+				'edit_published_libros',
+			);
+			foreach ( $capacidades as $capacidad ) {
+				$admin->add_cap( $capacidad );
+			}
+		}
+
+		update_option( 'mgp_bib_caps_admin_v1', 1 );
 	}
 }

@@ -961,3 +961,70 @@ usa nuestro plugin.
   activación)
 - `readme.txt` (changelog)
 
+## 21. Inicio — "Categorías" y "Recomendados para ti" eran maqueta pura (v0.5.5)
+
+Tras recrear correctamente el primer libro real (post 211, CPT `libro`,
+categoría Computación e informática), el usuario reportó: aparece en
+Catálogo pero no en Inicio. Al leer el `post_content` crudo de la página
+Inicio (ID 46) se confirmó que las secciones "Categorías" (3 tarjetas con
+conteos: Computación 5, Contabilidad 2, Mecánica 0) y "Recomendados para
+ti" (4 libros ficticios, todos "PORTADA PENDIENTE") eran HTML 100%
+estático hecho a mano en Elementor — nunca estuvieron conectadas a datos
+reales, a diferencia de `[mgp_saludo]`/`[mgp_sigue_leyendo]` (§17), que sí
+funcionan. No era un bug de esos shortcodes ni del catálogo — era una
+brecha de alcance nunca antes detectada.
+
+**Decisión del usuario** (vía pregunta directa con opciones): construir
+la versión real en vez de solo quitar el contenido de muestra o dejarlo
+como estaba.
+
+**Lo construido**: dos shortcodes nuevos en `MGP_Inicio`
+(`includes/inicio/class-mgp-inicio.php`):
+
+- `[mgp_categorias]` — para cada una de las 3 categorías técnicas fijas
+  (§3), imprime `get_term_by('slug', ..., 'categoria_tecnica')->count`
+  (conteo real de libros PUBLICADOS en esa categoría, cálculo nativo de
+  WordPress, sin query propia) dentro de tarjetas `mgp-cat-card` /
+  `mgp-cat-name` / `mgp-cat-count` — mismas clases globales reales que ya
+  existían en el diseño Elementor original (confirmadas en la captura de
+  "Sistema de diseño → Clases" pedida en la sesión de la v0.5.3).
+- `[mgp_recomendados]` — exige sesión iniciada (`is_user_logged_in()`);
+  `WP_Query` de los 4 libros publicados más recientes
+  (`post_type => libro`, `orderby => date`, `DESC`). Si no hay ninguno,
+  mensaje "Aún no hay libros para recomendar — vuelve pronto." en vez de
+  una grilla vacía. Cada tarjeta usa el mismo markup que el catálogo
+  (`mgp-book-card`, `mgp-tag` + `clase_tag_categoria()`, `mgp-btn-row`),
+  con nuevo método privado `imprimir_tarjeta_recomendado()` que además
+  refleja el estado real "Guardado" (`mgp-btn-guardado`) si el libro ya
+  está en `mgp_libros_guardados` del usuario — mismo patrón que
+  `MGP_Mis_Libros::imprimir_tarjeta()` (§18).
+
+**Verificación en vivo** (`do_shortcode()` con el usuario administrador
+real, sin datos de prueba — ya hay un libro real publicado):
+- `[mgp_categorias]` → Computación e informática: 1 libro, Contabilidad:
+  0 libros, Mecánica de producción: 0 libros — coincide exactamente con
+  el estado real del catálogo (un solo libro publicado, en Computación).
+- `[mgp_recomendados]` → devuelve la tarjeta real de "Python en una
+  semana" (R. M. Lewis), con `mgp-tag-comp`, portada real, enlace
+  `/leer/211/`, botón en estado "Guardado" (el usuario ya lo había
+  guardado antes) — sin ningún libro ficticio ni "PORTADA PENDIENTE".
+- `php -l` limpio; `filesize()` en el servidor coincide byte a byte con
+  el archivo local (12077/12077).
+
+**Pendiente para el usuario en Elementor** — página Inicio: quitar las 3
+tarjetas de categoría hardcodeadas y los 4 libros ficticios de
+"Recomendados para ti", y en su lugar agregar dos widgets "Shortcode"
+con `[mgp_categorias]` y `[mgp_recomendados]` en su lugar (mismo patrón
+que `[mgp_saludo]`/`[mgp_sigue_leyendo]`, §17).
+
+**Nota aparte, de baja prioridad, reportada por el usuario**: un espacio
+en blanco debajo del pie de página en Inicio. Explícitamente pospuesto
+por el usuario hasta que la biblioteca esté 100% funcional — no
+investigado aún.
+
+**Archivos modificados en v0.5.5**:
+- `includes/inicio/class-mgp-inicio.php` (2 shortcodes nuevos +
+  `imprimir_tarjeta_recomendado()`)
+- `mgp-biblioteca-core.php` (versión 0.5.5)
+- `readme.txt` (changelog)
+

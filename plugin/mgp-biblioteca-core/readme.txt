@@ -3,7 +3,7 @@ Contributors: ti-mgp
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.5.4
+Stable tag: 0.5.5
 License: GPLv2 or later
 
 Motor de datos de la biblioteca virtual del IESTP Manuel Gonzales Prada.
@@ -13,6 +13,17 @@ en biblioteca.mgp.edu.pe. Depende de DearFlip Lite (lector) y de Members
 (el plugin verifica su presencia antes de usarlos).
 
 == Registro de cambios ==
+
+= 0.5.5 =
+* Nuevo: shortcodes [mgp_categorias] y [mgp_recomendados] para la página
+  Inicio — reemplazan el contenido "Categorías" y "Recomendados para ti"
+  que era 100% de muestra hardcodeado en Elementor (libros ficticios,
+  conteos falsos). [mgp_categorias] imprime el conteo real de libros
+  publicados por cada una de las 3 carreras técnicas. [mgp_recomendados]
+  muestra los 4 libros publicados más recientes (con mensaje si aún no
+  hay ninguno), reutilizando la misma tarjeta visual del catálogo,
+  incluyendo el estado real "Guardado" si el usuario ya lo guardó. Ver
+  MEMORIA.md §21.
 
 = 0.5.4 =
 * Fix importante: el rol "administrator" de WordPress nunca vio el

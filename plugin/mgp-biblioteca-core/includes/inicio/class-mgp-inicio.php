@@ -7,11 +7,18 @@
  * progreso (datos reales de MGP_Usuario, no las tarjetas de muestra
  * hechas a mano en Elementor).
  *
- * Registra dos shortcodes para insertarse en Elementor con el widget
- * "Shortcode" (Elementor Pro), reemplazando el bloque de saludo y la fila
- * de tarjetas de muestra existentes:
+ * Registra los shortcodes para insertarse en Elementor con el widget
+ * "Shortcode" (Elementor Pro), reemplazando bloques de saludo/muestra:
  *   [mgp_saludo]         -> título "Hola, {nombre}" + subtítulo
  *   [mgp_sigue_leyendo]  -> grilla de tarjetas con progreso real
+ *   [mgp_categorias]     -> conteo real de libros publicados por categoría
+ *                           (bug real detectado 30/08/2026: "Categorías" y
+ *                           "Recomendados para ti" eran texto de muestra
+ *                           escrito a mano en Elementor, con conteos y
+ *                           libros ficticios que nunca cambiaban con datos
+ *                           reales — ver MEMORIA.md §21).
+ *   [mgp_recomendados]   -> los 4 libros publicados más recientes, reales,
+ *                           con botón Guardar reflejando el estado real.
  *
  * @package MGP_Biblioteca_Core
  */
@@ -25,6 +32,8 @@ class MGP_Inicio {
 	public function registrar_hooks(): void {
 		add_shortcode( 'mgp_saludo', array( $this, 'shortcode_saludo' ) );
 		add_shortcode( 'mgp_sigue_leyendo', array( $this, 'shortcode_sigue_leyendo' ) );
+		add_shortcode( 'mgp_categorias', array( $this, 'shortcode_categorias' ) );
+		add_shortcode( 'mgp_recomendados', array( $this, 'shortcode_recomendados' ) );
 	}
 
 	/**
@@ -169,6 +178,142 @@ class MGP_Inicio {
 					</a>
 					<button type="button" class="mgp-btn mgp-btn-ghost mgp-btn-guardar" data-libro-id="<?php echo esc_attr( $libro_id ); ?>">
 						<?php esc_html_e( 'Guardar', 'mgp-biblioteca' ); ?>
+					</button>
+				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * [mgp_categorias] — conteo real de libros publicados por cada una de
+	 * las 3 carreras técnicas confirmadas (ver MEMORIA.md §3/§12). Usa
+	 * $termino->count, que WordPress mantiene automáticamente al
+	 * publicar/despublicar libros — no hace falta contar a mano.
+	 * Reemplaza el texto de muestra "5 libros"/"2 libros"/"0 libros" que
+	 * vivía hardcodeado en Elementor (nunca cambiaba con datos reales).
+	 */
+	public function shortcode_categorias(): string {
+		$mapa_categorias = array(
+			'computacion-e-informatica' => __( 'Computación e informática', 'mgp-biblioteca' ),
+			'contabilidad'              => __( 'Contabilidad', 'mgp-biblioteca' ),
+			'mecanica-de-produccion'    => __( 'Mecánica de producción', 'mgp-biblioteca' ),
+		);
+
+		ob_start();
+		?>
+		<div class="mgp-row-wrap">
+			<?php foreach ( $mapa_categorias as $slug => $nombre ) : ?>
+				<?php
+				$termino = get_term_by( 'slug', $slug, 'categoria_tecnica' );
+				$conteo  = $termino ? (int) $termino->count : 0;
+				?>
+				<div class="mgp-cat-card">
+					<h3 class="mgp-cat-name"><?php echo esc_html( $nombre ); ?></h3>
+					<p class="mgp-cat-count">
+						<?php
+						echo esc_html(
+							sprintf(
+								/* translators: %d: cantidad de libros publicados en la categoría */
+								_n( '%d libro', '%d libros', $conteo, 'mgp-biblioteca' ),
+								$conteo
+							)
+						);
+						?>
+					</p>
+				</div>
+			<?php endforeach; ?>
+		</div>
+		<?php
+		return (string) ob_get_clean();
+	}
+
+	/**
+	 * [mgp_recomendados] — los 4 libros publicados más recientes (datos
+	 * reales), con el botón Guardar reflejando si el usuario ya lo tiene
+	 * guardado. Reemplaza las 4 tarjetas de muestra con libros ficticios
+	 * ("Ultimate Python Hola Mundo", etc.) que vivían hardcodeadas en
+	 * Elementor. No es un motor de recomendación — es honestamente "lo
+	 * último agregado al catálogo", que es preferible a mostrar libros
+	 * que no existen.
+	 */
+	public function shortcode_recomendados(): string {
+		if ( ! is_user_logged_in() ) {
+			return '';
+		}
+
+		$usuario_id = get_current_user_id();
+		$guardados  = get_user_meta( $usuario_id, 'mgp_libros_guardados', true );
+		$guardados  = is_array( $guardados ) ? $guardados : array();
+
+		$consulta = new WP_Query(
+			array(
+				'post_type'      => 'libro',
+				'post_status'    => 'publish',
+				'posts_per_page' => 4,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+				'no_found_rows'  => true,
+			)
+		);
+
+		if ( ! $consulta->have_posts() ) {
+			return '<p class="mgp-page-sub">' . esc_html__( 'Aún no hay libros para recomendar — vuelve pronto.', 'mgp-biblioteca' ) . '</p>';
+		}
+
+		ob_start();
+		?>
+		<div class="mgp-row-wrap">
+			<?php
+			while ( $consulta->have_posts() ) :
+				$consulta->the_post();
+				$this->imprimir_tarjeta_recomendado( get_the_ID(), in_array( get_the_ID(), $guardados, true ) );
+			endwhile;
+			?>
+		</div>
+		<?php
+		wp_reset_postdata();
+		return (string) ob_get_clean();
+	}
+
+	/**
+	 * Tarjeta de "Recomendados": igual a la del catálogo, pero el botón
+	 * Guardar arranca en estado "Guardado" si el libro ya está en
+	 * mgp_libros_guardados (mismo patrón que MGP_Mis_Libros).
+	 */
+	private function imprimir_tarjeta_recomendado( int $libro_id, bool $guardado ): void {
+		$autor     = get_post_meta( $libro_id, '_mgp_autor', true );
+		$terminos  = get_the_terms( $libro_id, 'categoria_tecnica' );
+		$categoria = ( $terminos && ! is_wp_error( $terminos ) ) ? $terminos[0] : null;
+		$clase_tag = $categoria ? MGP_Catalogo::clase_tag_categoria( $categoria->slug ) : '';
+		?>
+		<div class="mgp-card-slot">
+			<div class="mgp-book-card">
+				<div class="mgp-book-cover">
+					<?php if ( has_post_thumbnail( $libro_id ) ) : ?>
+						<?php echo get_the_post_thumbnail( $libro_id, 'medium', array( 'loading' => 'lazy' ) ); ?>
+					<?php else : ?>
+						<span class="mgp-book-cover-label"><?php esc_html_e( 'portada pendiente', 'mgp-biblioteca' ); ?></span>
+					<?php endif; ?>
+				</div>
+
+				<?php if ( $categoria ) : ?>
+					<span class="mgp-tag<?php echo $clase_tag ? ' ' . esc_attr( $clase_tag ) : ''; ?>">
+						<?php echo esc_html( $categoria->name ); ?>
+					</span>
+				<?php endif; ?>
+
+				<div class="mgp-book-meta">
+					<h3 class="mgp-book-title"><?php echo esc_html( get_the_title( $libro_id ) ); ?></h3>
+					<p class="mgp-book-author"><?php echo esc_html( $autor ); ?></p>
+				</div>
+
+				<div class="mgp-btn-row">
+					<a class="mgp-btn mgp-btn-primary" href="<?php echo esc_url( home_url( '/leer/' . $libro_id . '/' ) ); ?>">
+						<?php esc_html_e( 'Leer', 'mgp-biblioteca' ); ?>
+					</a>
+					<button type="button" class="mgp-btn mgp-btn-ghost mgp-btn-guardar<?php echo $guardado ? ' mgp-btn-guardado' : ''; ?>" data-libro-id="<?php echo esc_attr( $libro_id ); ?>">
+						<?php echo $guardado ? esc_html__( 'Guardado', 'mgp-biblioteca' ) : esc_html__( 'Guardar', 'mgp-biblioteca' ); ?>
 					</button>
 				</div>
 			</div>

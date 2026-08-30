@@ -1,17 +1,19 @@
 # Ruta de implementación — Biblioteca Virtual MGP
 
-Estado: **plugin propio v0.5.4. Login, Catálogo e Inicio terminadas y
-verificadas en vivo. Mis libros: backend listo, falta que el usuario
-coloque los 2 shortcodes en Elementor. Bug real corregido: el rol
-administrador nunca tuvo permiso para ver el menú "Libros" en
-wp-admin (solo el rol bibliotecario lo tenía) — corregido y aplicado
-en caliente — ver MEMORIA.md §20. El usuario ya empezó a subir libros
-reales (30/08/2026), el primero se subió por el CPT equivocado
-(DearFlip en vez de Libros) y debe recrearse desde el menú correcto.
-Pendiente real detectado: el progreso de lectura nunca se registra
-(falta enganchar el lector DearFlip al endpoint de progreso) — ver
-MEMORIA.md §18.** Ver MEMORIA.md §10-§20 para el detalle de bugs
-corregidos y decisiones tomadas.
+Estado: **plugin propio v0.5.5. Login, Catálogo terminadas y
+verificadas en vivo. Inicio: backend 100% real listo (saludo, sigue
+leyendo, categorías, recomendados), falta que el usuario reemplace en
+Elementor las 2 secciones aún con maqueta (Categorías/Recomendados)
+por los 2 shortcodes nuevos — ver MEMORIA.md §21. Mis libros: backend
+listo, falta que el usuario coloque los 2 shortcodes en Elementor. El
+primer libro real ya está publicado correctamente (post 211, "Python
+en una semana", CPT libro, categoría Computación e informática) y
+visible en Catálogo. Pendiente real detectado: el progreso de lectura
+nunca se registra (falta enganchar el lector DearFlip al endpoint de
+progreso) — ver MEMORIA.md §18. Pendiente de baja prioridad, pospuesto
+por el usuario: espacio en blanco debajo del pie de página en Inicio.**
+Ver MEMORIA.md §10-§21 para el detalle de bugs corregidos y decisiones
+tomadas.
 
 ## Fase 0 — Hecho
 - Sitio Elementor diseñado y publicado en biblioteca.mgp.edu.pe (fuera de
@@ -100,12 +102,21 @@ corregidos y decisiones tomadas.
       apareció en wp-admin, ni para el propio administrador. Nuevo
       `MGP_Loader::reparar_capacidades_admin()`, autoreparación
       aplicada en caliente. Ver MEMORIA.md §20.
-- [ ] Subir un primer libro real de prueba (Libros → Añadir nuevo) para
-      validar el catálogo con datos reales (ya cableado, solo falta
-      contenido). El primer intento del usuario (30/08/2026) se subió
-      por error desde el menú "DearFlip Books" (CPT `dflip`, no
-      `libro`) — pendiente recrearlo desde "Libros → Añadir nuevo"
-      ahora que el menú es visible. Ver MEMORIA.md §20.
+- [x] Subir un primer libro real de prueba (Libros → Añadir nuevo) para
+      validar el catálogo con datos reales. Recreado correctamente
+      (post 211, "Python en una semana", CPT `libro`, categoría
+      Computación e informática) — visible en Catálogo con tag de
+      color correcto. Ver MEMORIA.md §20.
+- [x] **Página Inicio — Categorías y Recomendados eran maqueta pura
+      (v0.5.5)**: nuevos shortcodes `[mgp_categorias]` (conteo real por
+      carrera) y `[mgp_recomendados]` (4 libros publicados más
+      recientes, con estado real de "Guardado") reemplazan el
+      contenido de muestra hardcodeado. Verificado en vivo con
+      `do_shortcode()`. Ver MEMORIA.md §21.
+- [ ] **Página Inicio — pendiente en Elementor**: quitar las 3 tarjetas
+      de categoría y los 4 libros ficticios de "Recomendados para ti"
+      hechos a mano, agregar dos widgets "Shortcode" con
+      `[mgp_categorias]` y `[mgp_recomendados]`. Ver MEMORIA.md §21.
 - [ ] **Empezar la carga real de hasta 200 libros**, uno por uno desde el
       admin (decisión confirmada — sin importador CSV).
 

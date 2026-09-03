@@ -3,7 +3,7 @@ Contributors: ti-mgp
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.5.6
+Stable tag: 0.5.8
 License: GPLv2 or later
 
 Motor de datos de la biblioteca virtual del IESTP Manuel Gonzales Prada.
@@ -13,6 +13,32 @@ en biblioteca.mgp.edu.pe. Depende de DearFlip Lite (lector) y de Members
 (el plugin verifica su presencia antes de usarlos).
 
 == Registro de cambios ==
+
+= 0.5.8 =
+* Fix crítico: el botón "Leer" en TODAS las tarjetas del sitio (catálogo,
+  inicio/sigue-leyendo, inicio/recomendados, mis-libros) apuntaba directo
+  a la ruta cruda de streaming `/leer/{id}/` en vez de a la página
+  individual del libro (`/libro/{slug}/`, plantilla single-libro.php).
+  Efecto real: el navegador abría su visor de PDF nativo en vez del
+  lector DearFlip embebido, así que el enganche de progreso de v0.5.7
+  nunca podía dispararse (la instancia .df-element/df-app nunca existía
+  en esa página). Corregido: los 4 lugares ahora usan get_permalink()
+  para llevar siempre a la página del libro. Detectado y corregido tras
+  reporte del usuario probando el flujo real. Ver MEMORIA.md §24.
+
+= 0.5.7 =
+* Nuevo: registro real del progreso de lectura. Se investigó el JS
+  fuente de DearFlip Lite en el servidor y se confirmó que las opciones
+  documentadas onPageChanged/onFlip/onReady nunca se ejecutan en la
+  versión Lite (candado de la versión de pago: el método interno que las
+  llamaría está vacío a propósito). assets/js/mgp-lector.js ahora sondea
+  directamente las propiedades públicas currentPageNumber/pageCount de
+  la instancia del lector (guardada en el elemento .df-element vía
+  jQuery.data('df-app', ...)) y reporta a mgp_actualizar_progreso cuando
+  la página cambia y se estabiliza. Se elimina el código anterior de
+  este archivo, que escuchaba un evento 'dflip.pageFlip' inexistente y
+  nunca pudo haber funcionado. Encolado y localizado (mgpLector) solo en
+  la página individual del libro. Ver MEMORIA.md §23.
 
 = 0.5.6 =
 * Fix: la clase CSS del botón "Guardado" estaba mal escrita como

@@ -162,12 +162,21 @@ gestionar libros sin necesitar cuenta de Administrador completo.
 - [x] Configurar Git remoto (GitHub/GitLab) y hacer el primer push —
       hecho el 03/09/2026, ver §2.9. Remoto:
       `https://github.com/JhonatanAndree/bibliotecamgp.git`.
-- [ ] **Pendiente más importante detectado en §18**: el progreso de
+- [x] **Pendiente más importante detectado en §18**: el progreso de
       lectura real nunca se registra — falta el enganche entre los
       eventos de cambio de página del lector DearFlip Lite y el
-      endpoint AJAX `MGP_Usuario::actualizar_progreso()` (existe desde
-      v0.1.0 pero nadie lo llama). No se implementó a ciegas porque
-      falta verificar primero la API real de eventos de DearFlip Lite.
+      endpoint AJAX `MGP_Usuario::actualizar_progreso()`. Hecho en
+      v0.5.7 (§23) vía sondeo de `currentPageNumber`/`pageCount`.
+- [x] Bug crítico: botón "Leer" apuntaba a la ruta cruda de streaming en
+      vez de a la página del libro, así que el lector DearFlip (y su
+      enganche de progreso) nunca se alcanzaba en la práctica — hecho en
+      v0.5.8 (§24).
+- [ ] Falta verificación en vivo end-to-end: pasar páginas de un libro
+      real y confirmar que el progreso se guarda y se refleja en
+      "Mis libros → En progreso" (§24).
+- [ ] Confirmar con el usuario si el panel "Vista previa del lector"
+      (datos de muestra fijos, visible en Mis libros) debe eliminarse en
+      Elementor (§24).
 
 ## 7. Cómo desplegar el plugin al sitio en vivo
 
@@ -1110,4 +1119,141 @@ sincronizados de vuelta al repo local el 03/09/2026):
 - `readme.txt` (changelog agregado retroactivamente — el archivo en el
   servidor había quedado desactualizado en 0.5.4 y nunca reflejó ni
   0.5.5 ni 0.5.6)
+
+## 23. v0.5.7 — Progreso de lectura real, por fin enganchado (03/09/2026)
+
+**El pendiente más importante del proyecto (documentado desde §18)**:
+`MGP_Usuario::actualizar_progreso()` existe desde la v0.1.0 pero nunca
+tuvo ningún JS que lo llamara. Antes de escribir ese enganche a ciegas
+(la decisión tomada en su momento, correctamente, fue NO adivinar la API
+de eventos de DearFlip), se investigó el JS fuente real del lector en el
+servidor (`wp-content/plugins/3d-flipbook-dflip-lite/assets/js/dflip.js`,
+vía Novamira).
+
+**Hallazgo real #1 — los callbacks documentados de DearFlip NO funcionan
+en la versión Lite**: la API pública de DearFlip acepta opciones como
+`onPageChanged`, `onFlip`, `onReady` (se ven en el objeto de opciones por
+defecto del archivo). Pero el método interno que en verdad las ejecuta
+está vacío a propósito:
+```
+key: "executeCallback",
+value: function executeCallback(callbackName) {}
+```
+Es decir, todas las llamadas internas (`this.executeCallback('onPageChanged')`,
+etc.) no hacen nada — es un candado de la versión de pago (Pro), no un
+bug. Esto también explica por qué una versión anterior, nunca verificada,
+de `assets/js/mgp-lector.js` escuchaba un evento de DOM
+`'dflip.pageFlip'` que **no existe en ningún lado del código fuente** —
+nunca pudo haber funcionado, era código especulativo sin comprobar.
+
+**Hallazgo real #2 — lo que SÍ funciona**: dentro del método `gotoPage()`
+de la clase `App` de DearFlip, cada cambio de página actualiza dos
+propiedades públicas simples de la instancia, ANTES de llamar al
+`executeCallback` vacío:
+- `app.currentPageNumber` — página actual (1-indexada).
+- `app.pageCount` — total de páginas del PDF (asignado al cargar el
+  documento, línea `this.endPage = this.pageCount = this.provider.pageCount`).
+
+Y esa instancia queda accesible desde afuera: `dflip.js` la guarda en el
+propio elemento `.df-element` vía **jQuery**, no como atributo del DOM:
+`options.element.data('df-app', app)`. Por eso el enganche necesita
+jQuery (ya disponible: `dflip-script` depende de `'jquery'`, confirmado
+consultando `$wp_scripts->registered['dflip-script']->deps` en el
+servidor real).
+
+**Implementación aplicada**: `assets/js/mgp-lector.js` reescrito por
+completo (el código anterior, especulativo, se eliminó). Ahora:
+1. Sondea (polling, cada 2s) `jQuery('.df-element').data('df-app')`
+   hasta que la instancia exista y tenga `pageCount` (cubre el tiempo de
+   carga del PDF; da hasta ~5 minutos antes de dejar de intentar).
+2. Cuando `app.currentPageNumber` cambia respecto a la última página
+   reportada, espera 1.5s de silencio (debounce) antes de reportar — así
+   no se manda una petición AJAX por cada hoja que el estudiante pasa
+   rápido buscando dónde se quedó, solo cuando se "asienta" en una
+   página.
+3. Llama a `mgp_actualizar_progreso` (POST: `libro_id`, `pagina`,
+   `total`) — el endpoint ya existente desde v0.1.0, sin cambios.
+
+**Cambios de encolado**: `MGP_Plantilla_Single_Libro::encolar_assets()`
+ahora también encola `mgp-lector.js` (dependencia `jquery`, footer) SOLO
+en la página individual del libro, y lo localiza con `mgpLector`
+(`ajaxUrl`, `nonce`, `libroId` vía `get_queried_object_id()`) — antes
+esta página no tenía NINGÚN objeto JS localizado del plugin, así que el
+progreso no podía reportarse aunque hubiera existido el enganche.
+
+**Pendiente de verificación en vivo**: falta confirmar con un libro real
+que, al pasar páginas en el lector, `mgp_progreso_libro_{id}` se
+actualiza en la base de datos y que `[mgp_en_progreso]`/`[mgp_sigue_leyendo]`
+reflejan el avance real. No se hizo esa prueba en esta sesión porque
+requiere interactuar con el lector visualmente (pasar páginas de un PDF
+real), no solo revisar código — recomendado como primer paso de la
+próxima sesión.
+
+**Archivos modificados en v0.5.7**:
+- `assets/js/mgp-lector.js` (reescrito completo: enganche real de
+  progreso, se quitó el código especulativo del evento inexistente)
+- `includes/plantillas/class-mgp-plantilla-single-libro.php` (encola y
+  localiza `mgp-lector.js`)
+- `mgp-biblioteca-core.php` (versión 0.5.7)
+- `readme.txt` (changelog)
+
+## 24. Bug real: botón "Leer" nunca llevaba al lector DearFlip (v0.5.8, 03/09/2026)
+
+**Reportado por el usuario probando el flujo real** (no encontrado por
+revisión de código): al darle clic a "Leer" en Mis libros, el navegador
+abría su visor de PDF nativo (imagen adjunta: URL
+`biblioteca.mgp.edu.pe/leer/211/`, controles del propio navegador,
+"página 11/51") en vez del lector DearFlip embebido de la biblioteca.
+
+**Causa raíz**: TODAS las tarjetas del sitio (catálogo, Inicio/"sigue
+leyendo", Inicio/"recomendados para ti", Mis libros) armaban el href del
+botón "Leer" apuntando directo a la ruta cruda de streaming del PDF,
+`home_url('/leer/' . $libro_id . '/')` (la ruta que sirve
+`MGP_Lector`, pensada ÚNICAMENTE como el atributo `source` del elemento
+`.df-element` para que DearFlip la consuma — nunca como destino de
+navegación de usuario). La página real del lector es
+`/libro/{slug}/` (plantilla `single-libro.php`, vía
+`MGP_Plantilla_Single_Libro`), que sí contiene el `.df-element` con
+DearFlip embebido. Como el usuario nunca llegaba a esa página, el
+enganche de progreso recién construido en v0.5.7 (§23) —que depende de
+encontrar `.df-element` en el DOM vía `jQuery.data('df-app', ...)`—
+jamás podía dispararse: el elemento simplemente no existía en la página
+del visor nativo del navegador. Este bug volvía inalcanzable en la
+práctica toda la funcionalidad de v0.5.7, pese a que esa funcionalidad
+en sí estaba bien implementada.
+
+**Corrección**: en los 4 lugares, el href cambió de
+`home_url('/leer/' . $libro_id . '/')` a `get_permalink($libro_id)` (la
+función nativa de WordPress que resuelve el permalink real del CPT
+`libro`, que ya es `/libro/{slug}/` por su registro en
+`MGP_CPT_Libro`).
+
+**Despliegue y verificación**: aplicado primero en vivo vía Novamira
+(`execute-php` + `file_put_contents`, reemplazo de cadena exacta,
+`substr_count()` confirmó 1/2/1 coincidencias antes de reemplazar,
+`php -l` limpio en los 4 archivos), luego sincronizado al repo local.
+Verificado en el servidor con `wp_remote_get()` autenticado con cookie
+de sesión real: el href de "Leer" en Mis libros ahora resuelve a
+`https://biblioteca.mgp.edu.pe/libro/python-en-una-semana/`.
+
+**Pendiente de verificación en vivo** (mismo pendiente que quedó abierto
+en §23, ahora sí alcanzable): abrir un libro real desde "Leer", pasar
+páginas en el lector DearFlip y confirmar que `mgp_progreso_libro_{id}`
+se actualiza y que "Mis libros → En progreso" refleja el avance.
+
+**Nota aparte, sin resolver todavía**: en la captura de Mis libros del
+usuario también se ve un panel "Vista previa del lector" con datos de
+muestra fijos ("Aprendiendo React · página 72 de 180") debajo de la
+sección de libros guardados — parece contenido de muestra de Elementor
+igual al de los 3 libros ficticios ya corregidos en §17, pero es un
+elemento aparte que el usuario todavía no pidió quitar explícitamente.
+Queda pendiente confirmar con el usuario si debe eliminarse.
+
+**Archivos modificados en v0.5.8**:
+- `includes/catalogo/template-tarjeta-libro.php` (href del botón Leer)
+- `includes/inicio/class-mgp-inicio.php` (href del botón Leer, 2
+  ocurrencias: sigue-leyendo y recomendados)
+- `includes/mis-libros/class-mgp-mis-libros.php` (href del botón Leer)
+- `mgp-biblioteca-core.php` (versión 0.5.8)
+- `readme.txt` (changelog)
 

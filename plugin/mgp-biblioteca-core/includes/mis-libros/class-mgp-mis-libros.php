@@ -199,7 +199,7 @@ class MGP_Mis_Libros {
 					</div>
 				<?php endif; ?>
 				<div class="mgp-btn-row">
-					<a class="mgp-btn mgp-btn-primary" href="<?php echo esc_url( home_url( '/leer/' . $libro_id . '/' ) ); ?>">
+					<a class="mgp-btn mgp-btn-primary" href="<?php echo esc_url( get_permalink( $libro_id ) ); ?>">
 						<?php esc_html_e( 'Leer', 'mgp-biblioteca' ); ?>
 					</a>
 					<button type="button"

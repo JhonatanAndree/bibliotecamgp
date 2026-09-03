@@ -203,11 +203,10 @@ class MGP_Mis_Libros {
 						<?php esc_html_e( 'Leer', 'mgp-biblioteca' ); ?>
 					</a>
 					<button type="button"
-						class="mgp-btn mgp-btn-ghost mgp-btn-guardar<?php echo $guardado ? ' mgp-btn-guardado' : ''; ?>"
+						class="mgp-btn mgp-btn-ghost mgp-btn-guardar<?php echo $guardado ? ' mgp-btn-saved' : ''; ?>"
 						data-libro-id="<?php echo esc_attr( $libro_id ); ?>">
 						<?php echo $guardado ? esc_html__( 'Guardado', 'mgp-biblioteca' ) : esc_html__( 'Guardar', 'mgp-biblioteca' ); ?>
 					</button>
-				</div>
 			</div>
 		</div>
 		<?php

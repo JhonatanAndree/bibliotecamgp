@@ -312,7 +312,7 @@ class MGP_Inicio {
 					<a class="mgp-btn mgp-btn-primary" href="<?php echo esc_url( home_url( '/leer/' . $libro_id . '/' ) ); ?>">
 						<?php esc_html_e( 'Leer', 'mgp-biblioteca' ); ?>
 					</a>
-					<button type="button" class="mgp-btn mgp-btn-ghost mgp-btn-guardar<?php echo $guardado ? ' mgp-btn-guardado' : ''; ?>" data-libro-id="<?php echo esc_attr( $libro_id ); ?>">
+					<button type="button" class="mgp-btn mgp-btn-ghost mgp-btn-guardar<?php echo $guardado ? ' mgp-btn-saved' : ''; ?>" data-libro-id="<?php echo esc_attr( $libro_id ); ?>">
 						<?php echo $guardado ? esc_html__( 'Guardado', 'mgp-biblioteca' ) : esc_html__( 'Guardar', 'mgp-biblioteca' ); ?>
 					</button>
 				</div>

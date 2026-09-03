@@ -3,7 +3,7 @@ Contributors: ti-mgp
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.5.5
+Stable tag: 0.5.6
 License: GPLv2 or later
 
 Motor de datos de la biblioteca virtual del IESTP Manuel Gonzales Prada.
@@ -13,6 +13,34 @@ en biblioteca.mgp.edu.pe. Depende de DearFlip Lite (lector) y de Members
 (el plugin verifica su presencia antes de usarlos).
 
 == Registro de cambios ==
+
+= 0.5.6 =
+* Fix: la clase CSS del botón "Guardado" estaba mal escrita como
+  "mgp-btn-guardado" — la clase global real del diseño Elementor es
+  "mgp-btn-saved" (ver el listado original de clases en MEMORIA.md §3).
+  Corregido en mgp-catalogo.js, class-mgp-inicio.php y
+  class-mgp-mis-libros.php. La hoja de estilos de respaldo (ver punto
+  siguiente) mantiene además una regla de compatibilidad para ambos
+  nombres de clase por si quedó HTML viejo en caché.
+* Fix importante de arquitectura: se detectó que el editor "atómico" de
+  Elementor (widgets e-flexbox/clases atómicas) solo genera CSS para
+  clases asignadas a widgets reales dentro del árbol del editor — las
+  clases que nuestros shortcodes (mgp_categorias, mgp_recomendados,
+  mgp_sigue_leyendo, mgp_guardados, mgp_en_progreso,
+  template-tarjeta-libro.php) imprimen dentro de HTML generado por PHP
+  son invisibles para ese escáner, así que Elementor nunca escribía su
+  CSS — aunque la misma clase sí funciona en una página donde SÍ es un
+  widget real (ej. los chips de categoría en Catálogo). En la práctica,
+  las tarjetas y secciones generadas por shortcode podían verse sin
+  ningún estilo. Solución: `assets/css/mgp-biblioteca.css` ahora declara
+  a mano los valores exactos de cada clase global usada por los
+  shortcodes (mgp-cat-card, mgp-row-wrap, mgp-book-card, mgp-tag*,
+  mgp-btn*, etc.), usando las mismas variables CSS (--mgp-*) que
+  Elementor ya declara en :root — así hereda automáticamente cualquier
+  cambio de color/token que se haga en "Sistema de diseño" de Elementor,
+  sin tocar este archivo. Es una copia de respaldo, NO la fuente de
+  verdad: si el diseño visual cambia en Elementor, este archivo debe
+  actualizarse a mano también. Ver MEMORIA.md §22.
 
 = 0.5.5 =
 * Nuevo: shortcodes [mgp_categorias] y [mgp_recomendados] para la página

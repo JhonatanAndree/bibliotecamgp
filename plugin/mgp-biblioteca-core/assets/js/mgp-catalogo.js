@@ -57,7 +57,7 @@
 					if ( json.success ) {
 						var guardado = 'guardado' === json.data.estado;
 						boton.textContent = guardado ? 'Guardado' : 'Guardar';
-						boton.classList.toggle( 'mgp-btn-guardado', guardado );
+						boton.classList.toggle( 'mgp-btn-saved', guardado );
 					}
 				} )
 				.catch( function () {

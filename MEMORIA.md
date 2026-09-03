@@ -1043,3 +1043,71 @@ investigado aún.
 - `mgp-biblioteca-core.php` (versión 0.5.5)
 - `readme.txt` (changelog)
 
+## 22. v0.5.6 — CSS de respaldo para clases que Elementor "atómico" nunca genera + fix de typo en clase "Guardado" (reconstruido el 03/09/2026)
+
+**Cómo se detectó esto**: al retomar el proyecto (03/09/2026, sesión de
+configuración del remoto Git), se encontró que el plugin en el sitio real
+ya estaba en **v0.5.6** — dos versiones más que el último commit local
+(`v0.5.5`) — con archivos modificados en el servidor el 02-03/09/2026 sin
+ningún registro en este archivo ni en Git. Es decir: hubo una sesión de
+trabajo real sobre el sitio en vivo que nunca se sincronizó de vuelta al
+repo local. Esta sección se reconstruyó comparando el código del servidor
+contra el repo local (vía Novamira) para no perder ese trabajo; la fecha
+exacta y los detalles de investigación de esa sesión original no están
+disponibles, solo el resultado final en el código.
+
+**Hallazgo real (el más importante de esta versión)**: el sitio pasó al
+editor "atómico" de Elementor (widgets e-flexbox/clases atómicas). Ese
+editor **solo genera CSS para clases asignadas a widgets reales dentro
+de su propio árbol** — las clases que nuestros shortcodes (`[mgp_categorias]`,
+`[mgp_recomendados]`, `[mgp_sigue_leyendo]`, `[mgp_guardados]`,
+`[mgp_en_progreso]`, y `template-tarjeta-libro.php` del catálogo AJAX)
+imprimen dentro de HTML generado por PHP son invisibles para ese
+escáner. Resultado: esas clases (`mgp-book-card`, `mgp-tag`, `mgp-btn*`,
+`mgp-cat-card`, `mgp-row-wrap`, etc.) nunca tuvieron CSS generado por
+Elementor en las páginas donde solo aparecen vía shortcode — aunque la
+misma clase sí funciona en Catálogo, donde los chips SÍ son widgets
+reales. En la práctica, las tarjetas de Inicio y Mis libros podían
+verse sin ningún estilo visual.
+
+**Corrección aplicada**: `assets/css/mgp-biblioteca.css` (antes casi
+vacío, solo tenía la regla vieja `.g-mgp-empty`) ahora declara a mano
+los valores exactos de cada clase global usada por los shortcodes,
+tomados de la definición real en Elementor (`Global_Classes_Repository`)
+y de los tokens de color/tipografía `:root` que Elementor ya carga en
+`post-8.css` (kit "Kit por defecto") — usando las mismas variables CSS
+`--mgp-*`, así que si el usuario cambia un color/token en "Sistema de
+diseño" de Elementor, este archivo lo hereda automáticamente. **Es una
+copia de respaldo, NO la fuente de verdad**: si el diseño visual cambia
+en Elementor, este archivo debe actualizarse a mano también — dejarlo
+desactualizado no rompe nada de inmediato, pero las tarjetas generadas
+por shortcode dejarían de reflejar un cambio de diseño hasta corregirlo
+aquí.
+
+**Segundo fix, más chico**: la clase CSS del botón en estado "Guardado"
+estaba mal escrita como `mgp-btn-guardado` en el código (JS y PHP) desde
+que se creó — la clase global real del diseño Elementor, tal como se
+documentó desde el principio en §3 de esta memoria, es `mgp-btn-saved`
+(en inglés, a diferencia del resto de clases que están en español). Se
+corrigió en `mgp-catalogo.js`, `class-mgp-inicio.php` y
+`class-mgp-mis-libros.php`. El CSS de respaldo declara la regla para
+ambos nombres de clase (`.mgp-btn-saved, .mgp-btn-guardado`) por
+compatibilidad, por si queda HTML viejo en caché de navegador con la
+clase anterior.
+
+**Pendiente**: confirmar visualmente en el sitio real que las tarjetas
+de Inicio y Mis libros ahora se ven con el estilo correcto (portada,
+tag de categoría, botones) — no se pudo hacer una verificación en vivo
+completa al reconstruir esta sección, solo se comparó el código.
+
+**Archivos modificados en v0.5.6** (recuperados del servidor, ya
+sincronizados de vuelta al repo local el 03/09/2026):
+- `assets/css/mgp-biblioteca.css` (reescrito con el CSS de respaldo)
+- `assets/js/mgp-catalogo.js` (fix `mgp-btn-guardado` → `mgp-btn-saved`)
+- `includes/inicio/class-mgp-inicio.php` (mismo fix)
+- `includes/mis-libros/class-mgp-mis-libros.php` (mismo fix)
+- `mgp-biblioteca-core.php` (versión 0.5.6)
+- `readme.txt` (changelog agregado retroactivamente — el archivo en el
+  servidor había quedado desactualizado en 0.5.4 y nunca reflejó ni
+  0.5.5 ni 0.5.6)
+

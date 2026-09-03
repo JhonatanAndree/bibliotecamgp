@@ -1,8 +1,210 @@
 /**
- * Ajustes MÍNIMOS de CSS. El diseño visual real vive en Elementor
- * (clases g-mgp-*) — este archivo solo cubre estados que Elementor no
- * puede expresar (ej. resultado vacío del buscador).
+ * CSS de respaldo para clases GLOBALES reales de Elementor (sistema
+ * "Biblioteca MGP Nocturna") que el generador de CSS de Elementor NUNCA
+ * escribe para esta página.
+ *
+ * Motivo (ver MEMORIA.md §22): desde que el sitio pasó al editor
+ * "atómico" de Elementor (widgets e-flexbox/clases atómicas), el CSS de
+ * cada página solo se genera para clases asignadas a widgets REALES
+ * dentro del árbol del editor. Las clases que nuestros shortcodes
+ * (mgp_categorias, mgp_recomendados, mgp_sigue_leyendo, mgp_guardados,
+ * mgp_en_progreso, template-tarjeta-libro.php) imprimen dentro de HTML
+ * generado por PHP son invisibles para ese escáner — nunca aparecen en
+ * el árbol de Elementor, así que su CSS nunca se escribe, aunque la
+ * clase exista y funcione perfecto en una página donde SÍ es un widget
+ * real (ej. los chips de categoría en Catálogo).
+ *
+ * Solución: declarar aquí, a mano, los mismos valores exactos que ya
+ * tiene cada clase global en el sistema de diseño (verificados contra
+ * la definición real vía Global_Classes_Repository de Elementor y los
+ * tokens de color/tipografía en :root de post-8.css, kit "Kit por
+ * defecto"). Esto es una copia de respaldo, NO la fuente de verdad — si
+ * el diseño visual cambia en Elementor, este archivo debe actualizarse
+ * a mano también.
+ *
+ * Se usan las mismas variables CSS (--mgp-*) que ya declara Elementor
+ * en :root (post-8.css, cargado en todas las páginas), así que si el
+ * usuario cambia un color/token en "Sistema de diseño" de Elementor,
+ * este archivo lo hereda automáticamente sin tocar nada aquí.
  */
+
+/* Tarjeta de categoría — [mgp_categorias] en Inicio. */
+.mgp-cat-card {
+	min-width: 200px;
+	flex: 1 1 200px;
+	text-decoration: none;
+	cursor: pointer;
+	padding: 16px 20px;
+	border-radius: 14px;
+	border: 1px solid var( --mgp-border );
+	background-color: var( --mgp-surface );
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+.mgp-cat-name {
+	font-family: var( --mgp-font-display );
+	font-weight: 600;
+	font-size: 15px;
+	color: var( --mgp-ink );
+	line-height: 1.3;
+	margin: 0;
+}
+.mgp-cat-count {
+	font-family: var( --mgp-font-body );
+	font-weight: 400;
+	font-size: 12px;
+	color: var( --mgp-ink-faint );
+	margin: 0;
+}
+@media ( max-width: 767px ) {
+	.mgp-cat-card {
+		min-width: 100%;
+		flex: 1 1 100%;
+	}
+}
+
+/* Tarjeta de libro — catálogo, sigue leyendo, guardados, en progreso,
+   recomendados (todas comparten esta base, ver MEMORIA.md §17/§18/§22). */
+.mgp-row-wrap {
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: 16px;
+	align-items: stretch;
+}
+.mgp-card-slot {
+	width: 220px;
+	display: flex;
+	flex-direction: column;
+}
+.mgp-book-card {
+	width: 100%;
+	height: 100%;
+	padding: 16px;
+	border-radius: 16px;
+	border: 1px solid var( --mgp-border );
+	background-color: var( --mgp-card );
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+.mgp-book-cover {
+	height: 150px;
+	padding: 12px;
+	border-radius: 10px;
+	background-color: var( --mgp-card );
+	display: flex;
+	flex: 0 0 auto;
+	justify-content: center;
+	align-items: center;
+}
+.mgp-book-cover-label {
+	font-family: var( --mgp-font-body );
+	font-weight: 400;
+	font-size: 11px;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	text-align: center;
+	color: var( --mgp-ink-faint );
+	margin: 0;
+}
+.mgp-tag {
+	font-family: var( --mgp-font-body );
+	font-weight: 600;
+	font-size: 11px;
+	letter-spacing: 0.03em;
+	text-transform: uppercase;
+	padding: 4px 10px;
+	border-radius: 999px;
+	align-self: flex-start;
+	margin: 0;
+}
+.mgp-tag-comp {
+	color: var( --mgp-info );
+	background-color: var( --mgp-tag-comp-bg );
+}
+.mgp-tag-conta {
+	color: var( --mgp-accent );
+	background-color: var( --mgp-tag-conta-bg );
+}
+.mgp-tag-meca {
+	color: var( --mgp-gold );
+	background-color: var( --mgp-tag-meca-bg );
+}
+.mgp-book-meta {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+.mgp-book-title {
+	font-family: var( --mgp-font-display );
+	font-weight: 600;
+	font-size: 16px;
+	color: var( --mgp-ink );
+	line-height: 1.3;
+	margin: 0;
+}
+.mgp-book-author {
+	font-family: var( --mgp-font-body );
+	font-weight: 400;
+	font-size: 13px;
+	color: var( --mgp-ink-muted );
+	line-height: 1.4;
+	margin: 0;
+}
+.mgp-btn-row {
+	width: 100%;
+	margin-block-start: 4px;
+	display: flex;
+	flex-direction: row;
+	gap: 10px;
+}
+.mgp-btn {
+	height: 40px;
+	min-height: 40px;
+	flex: 1 1 0%;
+	font-family: var( --mgp-font-body );
+	font-weight: 600;
+	font-size: 14px;
+	text-align: center;
+	cursor: pointer;
+	padding: 0 12px;
+	border-radius: 10px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+.mgp-btn-primary {
+	color: var( --mgp-on-accent );
+	border: 0;
+	background-color: var( --mgp-accent );
+}
+.mgp-btn-ghost {
+	color: var( --mgp-ink-muted );
+	border: 1px solid var( --mgp-border );
+	background-color: transparent;
+}
+/* Estado "Guardado" del botón — la clase global real es "mgp-btn-saved",
+   NO "mgp-btn-guardado" (typo corregido en el código en v0.5.6, ver
+   MEMORIA.md §22). Esta regla queda igual por compatibilidad si algún
+   HTML viejo en caché todavía trae la clase vieja. */
+.mgp-btn-saved,
+.mgp-btn-guardado {
+	background-color: var( --mgp-saved-bg );
+	color: var( --mgp-info );
+	border: 1px solid var( --mgp-info );
+}
+@media ( max-width: 767px ) {
+	.mgp-card-slot {
+		width: 100%;
+	}
+}
+
+/* Estado vacío (buscador/catálogo sin resultados, "Aún no tienes libros
+   en progreso", etc.) — clase real "mgp-page-sub" (ver MEMORIA.md §17).
+   Regla de compatibilidad por si queda HTML viejo con la clase "g-mgp-empty". */
 .g-mgp-empty {
 	opacity: 0.7;
 	font-style: italic;

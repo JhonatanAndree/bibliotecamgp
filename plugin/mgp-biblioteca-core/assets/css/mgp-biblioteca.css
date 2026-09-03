@@ -257,29 +257,41 @@
 	margin: 0;
 }
 
-/* Pestañas de "Mis libros" — [mgp_mis_libros] (ver MEMORIA.md §28).
+/* Pestañas de "Mis libros" — [mgp_mis_libros] (ver MEMORIA.md §28/§29).
    "En progreso" y "Guardados" comparten la misma página sin apilarse ni
    duplicarse; JS de toggle vive en mgp-catalogo.js (mismo patrón del
-   botón Guardar, ya cargado en esta página). */
+   botón Guardar, ya cargado en esta página).
+
+   Selectores con DOS clases (".mgp-tabs-nav .mgp-tab-btn", no solo
+   ".mgp-tab-btn") a propósito — ver MEMORIA.md §29: el tema Hello
+   Elementor trae en reset.css la regla
+   "[type=button],[type=submit],button{border:1px solid #c36;...}"
+   (especificidad 0,1,0, igual que una sola clase). Con una sola clase
+   había EMPATE de especificidad contra "[type=button]" y ganaba el
+   tema por cargar después en el <head> — el botón "Guardar" no sufría
+   esto porque ya usa 2 clases (mgp-btn + mgp-btn-guardar). Con 2
+   clases aquí también (0,2,0) se gana siempre, sin depender del orden
+   de carga. */
 .mgp-tabs-nav {
 	display: flex;
 	gap: 4px;
 	margin-block-end: 24px;
 	border-bottom: 1px solid var( --mgp-border );
 }
-.mgp-tab-btn {
+.mgp-tabs-nav .mgp-tab-btn {
 	font-family: var( --mgp-font-body );
 	font-weight: 600;
 	font-size: 14px;
 	color: var( --mgp-ink-muted );
 	background: transparent;
 	border: 0;
+	border-radius: 0;
 	border-bottom: 2px solid transparent;
 	padding: 10px 16px;
 	cursor: pointer;
 	margin-block-end: -1px;
 }
-.mgp-tab-btn-active {
+.mgp-tabs-nav .mgp-tab-btn-active {
 	color: var( --mgp-ink );
 	border-bottom-color: var( --mgp-accent );
 }
@@ -287,7 +299,7 @@
 	.mgp-tabs-nav {
 		gap: 0;
 	}
-	.mgp-tab-btn {
+	.mgp-tabs-nav .mgp-tab-btn {
 		flex: 1 1 0%;
 		text-align: center;
 		padding: 10px 8px;

@@ -1483,3 +1483,47 @@ pestañas correctamente con la tarjeta del libro real dentro del panel
   directamente en la base de datos (no requiere acción manual del
   usuario en el editor de Elementor).
 
+## §29 — Borde rosado/magenta en las pestañas de "Mis libros" (v0.5.13, 03/09/2026)
+
+**Reporte del usuario** (con captura): al probar el v0.5.12, las
+pestañas "En progreso"/"Guardados" se veían con un borde redondeado
+rosado/magenta, no el diseño esperado (subrayado plano bajo la pestaña
+activa).
+
+**Causa real, verificada leyendo el CSS del tema en el servidor**: el
+tema Hello Elementor trae en `reset.css` la regla
+`[type=button],[type=submit],button{border:1px solid #c36;
+border-radius:3px;color:#c36;...}` — especificidad CSS (0,1,0), la
+MISMA que una sola clase como `.mgp-tab-btn` (también 0,1,0). En un
+empate de especificidad, CSS resuelve por orden de carga: el `<link>`
+de `hello-elementor-css` (reset.css) se imprime DESPUÉS que
+`mgp-biblioteca.css` en el `<head>` (confirmado listando los
+`<link rel="stylesheet">` reales de la página), así que el tema
+ganaba. El botón "Guardar" (`.mgp-btn.mgp-btn-guardar`) nunca sufrió
+esto porque ya usa 2 clases (especificidad 0,2,0, gana siempre sin
+importar el orden).
+
+**Fix**: escalar los selectores de pestañas a 2 clases —
+`.mgp-tabs-nav .mgp-tab-btn` y `.mgp-tabs-nav .mgp-tab-btn-active` en
+vez de `.mgp-tab-btn`/`.mgp-tab-btn-active` solas — más
+`border-radius: 0` explícito para pisar el `border-radius:3px` del
+reset. Con 2 clases (0,2,0) el plugin gana siempre, sin depender de en
+qué orden WordPress imprima los `<link>` de cada plugin/tema.
+
+**Nota para el futuro**: cualquier `<button>` nuevo que el plugin
+agregue debe usar SIEMPRE 2+ clases CSS (nunca una sola), precisamente
+por este reset del tema — no es un caso aislado, es una regla general
+del sitio mientras Hello Elementor siga activo.
+
+**Despliegue**: `assets/css/mgp-biblioteca.css` redeployado completo
+(8453 bytes, verificado igual en servidor y local); `readme.txt`
+parcheado con `str_replace` en vez de reenvío completo (más liviano
+para un cambio de 2 líneas); versión bump a 0.5.13 en
+`mgp-biblioteca-core.php` (verificado 4027 bytes igual en ambos lados).
+
+**Archivos modificados en v0.5.13**:
+- `assets/css/mgp-biblioteca.css` (selectores de pestañas escalados a
+  2 clases + `border-radius: 0`)
+- `mgp-biblioteca-core.php` (versión 0.5.13)
+- `readme.txt` (changelog)
+

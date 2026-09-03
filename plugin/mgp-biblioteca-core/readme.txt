@@ -3,7 +3,7 @@ Contributors: ti-mgp
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.5.12
+Stable tag: 0.5.13
 License: GPLv2 or later
 
 Motor de datos de la biblioteca virtual del IESTP Manuel Gonzales Prada.
@@ -13,6 +13,18 @@ en biblioteca.mgp.edu.pe. Depende de DearFlip Lite (lector) y de Members
 (el plugin verifica su presencia antes de usarlos).
 
 == Registro de cambios ==
+
+= 0.5.13 =
+* Fix visual: los botones de pestañas de "Mis libros" (v0.5.12) se
+  veían con borde rosado/magenta en vez del diseño esperado. Causa:
+  el tema Hello Elementor trae en reset.css la regla
+  "[type=button],[type=submit],button{border:1px solid #c36;...}",
+  con la MISMA especificidad CSS (0,1,0) que ".mgp-tab-btn" — en un
+  empate de especificidad gana el que carga después en el <head>, y
+  el tema carga después que el plugin. El botón "Guardar" no tenía
+  este problema porque ya usa 2 clases. Corregido escalando los
+  selectores de pestañas a 2 clases (".mgp-tabs-nav .mgp-tab-btn"),
+  que siempre gana sin depender del orden de carga. Ver MEMORIA.md §29.
 
 = 0.5.12 =
 * Rediseño UX de "Mis libros": nuevo shortcode [mgp_mis_libros] con

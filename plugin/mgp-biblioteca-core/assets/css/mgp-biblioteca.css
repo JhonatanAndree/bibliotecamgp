@@ -210,3 +210,86 @@
 	font-style: italic;
 	padding: 24px 0;
 }
+
+/* Barra de progreso — [mgp_sigue_leyendo]/[mgp_en_progreso]/[mgp_guardados]
+   (ver MEMORIA.md §26/§27). Igual que el resto de clases de este archivo,
+   Elementor "atómico" nunca genera CSS para ella porque solo la imprime
+   PHP — nadie lo notó hasta que un libro real tuvo progreso (v0.5.7). */
+.mgp-progress {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+.mgp-progress-track {
+	width: 100%;
+	height: 6px;
+	border-radius: 999px;
+	background-color: var( --mgp-border );
+	overflow: hidden;
+}
+.mgp-progress-fill {
+	height: 100%;
+	border-radius: 999px;
+	background-color: var( --mgp-accent );
+}
+.mgp-progress-label {
+	font-family: var( --mgp-font-body );
+	font-weight: 400;
+	font-size: 13px;
+	color: var( --mgp-ink );
+	margin: 0;
+}
+
+/* Título y subtítulo de página ([mgp_saludo], mensajes de estado vacío en
+   todas las secciones) — misma clase real "mgp-page-sub" del bloque de
+   arriba. Texto legible pedido por el usuario (03/09/2026): antes caía en
+   el color por defecto del tema, muy apagado sobre el fondo oscuro. */
+.mgp-page-title {
+	font-family: var( --mgp-font-display );
+	font-weight: 600;
+	color: var( --mgp-ink );
+	margin: 0;
+}
+.mgp-page-sub {
+	font-family: var( --mgp-font-body );
+	font-weight: 400;
+	color: var( --mgp-ink );
+	margin: 0;
+}
+
+/* Pestañas de "Mis libros" — [mgp_mis_libros] (ver MEMORIA.md §28).
+   "En progreso" y "Guardados" comparten la misma página sin apilarse ni
+   duplicarse; JS de toggle vive en mgp-catalogo.js (mismo patrón del
+   botón Guardar, ya cargado en esta página). */
+.mgp-tabs-nav {
+	display: flex;
+	gap: 4px;
+	margin-block-end: 24px;
+	border-bottom: 1px solid var( --mgp-border );
+}
+.mgp-tab-btn {
+	font-family: var( --mgp-font-body );
+	font-weight: 600;
+	font-size: 14px;
+	color: var( --mgp-ink-muted );
+	background: transparent;
+	border: 0;
+	border-bottom: 2px solid transparent;
+	padding: 10px 16px;
+	cursor: pointer;
+	margin-block-end: -1px;
+}
+.mgp-tab-btn-active {
+	color: var( --mgp-ink );
+	border-bottom-color: var( --mgp-accent );
+}
+@media ( max-width: 767px ) {
+	.mgp-tabs-nav {
+		gap: 0;
+	}
+	.mgp-tab-btn {
+		flex: 1 1 0%;
+		text-align: center;
+		padding: 10px 8px;
+	}
+}

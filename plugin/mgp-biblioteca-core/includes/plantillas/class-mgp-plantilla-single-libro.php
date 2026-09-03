@@ -82,5 +82,34 @@ class MGP_Plantilla_Single_Libro {
 			array(),
 			MGP_BIB_VERSION
 		);
+
+		// Registro real del progreso de lectura (ver MEMORIA.md §23): se
+		// investigó el JS fuente de DearFlip Lite en el servidor y se
+		// confirmó que las opciones documentadas onPageChanged/onFlip/onReady
+		// nunca se ejecutan en la versión Lite (executeCallback() está vacío
+		// a propósito, candado de la versión de pago). mgp-lector.js NO
+		// depende de esos callbacks: sondea directamente las propiedades
+		// públicas currentPageNumber/pageCount de la instancia del lector,
+		// que sí se actualizan en cada cambio de página. Depende de 'jquery'
+		// porque dflip.js guarda esa instancia en el elemento .df-element
+		// vía jQuery.data('df-app', ...), no como atributo del DOM.
+		wp_enqueue_script(
+			'mgp-lector',
+			MGP_BIB_URL . 'assets/js/mgp-lector.js',
+			array( 'jquery' ),
+			MGP_BIB_VERSION,
+			true
+		);
+
+		$libro_id = get_queried_object_id();
+		wp_localize_script(
+			'mgp-lector',
+			'mgpLector',
+			array(
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'mgp_biblioteca_nonce' ),
+				'libroId' => $libro_id,
+			)
+		);
 	}
 }

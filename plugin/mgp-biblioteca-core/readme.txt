@@ -3,7 +3,7 @@ Contributors: ti-mgp
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.5.9
+Stable tag: 0.5.12
 License: GPLv2 or later
 
 Motor de datos de la biblioteca virtual del IESTP Manuel Gonzales Prada.
@@ -13,6 +13,35 @@ en biblioteca.mgp.edu.pe. Depende de DearFlip Lite (lector) y de Members
 (el plugin verifica su presencia antes de usarlos).
 
 == Registro de cambios ==
+
+= 0.5.12 =
+* Rediseño UX de "Mis libros": nuevo shortcode [mgp_mis_libros] con
+  pestañas — "En progreso" primero (vista por defecto), "Guardados" en
+  una segunda pestaña, en vez de dos secciones apiladas. Pedido directo
+  del usuario tras confirmar que el botón "Guardar" sí funcionaba
+  (verificado en BD y en el shortcode [mgp_en_progreso]) pero el libro
+  guardado-y-en-progreso solo aparecía en "En progreso" (§25) y el
+  usuario no sabía dónde buscarlo. Nuevo CSS (.mgp-tabs-nav,
+  .mgp-tab-btn) y JS de toggle (delegado en document, mismo patrón que
+  el botón Guardar). Principio de UX/UI de todo el sitio pedido
+  explícitamente por el usuario (ver MEMORIA.md §1/§28).
+
+= 0.5.11 =
+* Fix de legibilidad: la barra de progreso ("Vas por el X%") y los
+  mensajes de estado/título/subtítulo (mgp-page-title, mgp-page-sub —
+  saludo, "Aún no tienes libros...", etc.) nunca tuvieron CSS de respaldo
+  (mismo hueco de Elementor atómico del v0.5.6 — §22, nadie lo notó hasta
+  que hubo progreso real que mostrar). Ahora usan el token --mgp-ink
+  (blanco real del sistema de diseño) en vez de heredar el color apagado
+  por defecto. Pedido explícito del usuario. Ver MEMORIA.md §27.
+
+= 0.5.10 =
+* Fix: en Inicio, un libro recién agregado al catálogo Y ya en progreso
+  aparecía duplicado (una vez en "Sigue leyendo", otra en "Recomendados
+  para ti"). [mgp_recomendados] ahora excluye los libros con progreso
+  1-99% vía post__not_in. Se extrajo obtener_libros_en_progreso() como
+  método compartido entre ambos shortcodes para no duplicar la lógica.
+  Ver MEMORIA.md §26.
 
 = 0.5.9 =
 * Fix: en "Mis libros", un libro guardado Y en progreso aparecía duplicado

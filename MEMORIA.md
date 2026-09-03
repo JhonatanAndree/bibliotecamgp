@@ -15,6 +15,17 @@
 - **Restricción clave de infraestructura:** hosting con solo 1GB de RAM.
   Toda decisión técnica debe considerar esto (caché, sin listas ni queries
   pesadas, sin cargar librerías JS/CSS de más).
+- **Principio de UX/UI (pedido explícitamente por el usuario el
+  03/09/2026)**: todo el sitio debe priorizar navegación intuitiva y sin
+  fricción para los estudiantes. En la práctica: evitar información
+  duplicada o ambigua entre secciones (ver §25/§26 — un libro no debe
+  aparecer en dos sitios con significados distintos a la vez), estados
+  claros (guardado/en progreso/terminado sin solaparse), mensajes vacíos
+  útiles con llamada a la acción (ya aplicado en Guardados/En
+  progreso/Recomendados), y evitar contenido de muestra o mockups que
+  confundan con datos reales (§17, §21, §24). Aplicar este criterio a
+  toda decisión de diseño de flujo futura, no solo a los bugs ya
+  corregidos.
 
 ## 2. Historial de decisiones (cronológico)
 
@@ -147,18 +158,21 @@ gestionar libros sin necesitar cuenta de Administrador completo.
 
 - [ ] Confirmar con Biblioteca/Coordinación académica la lista COMPLETA
       de carreras técnicas (categorías) — el diseño solo muestra 3.
-- [ ] Subir portadas reales de los libros (hoy "portada pendiente").
+- [ ] Subir portadas reales y cargar más libros reales al catálogo (hoy
+      solo hay 1: "Python en una semana"; el resto del catálogo mostrado
+      en el diseño original era de muestra, ya retirado).
 - [x] Mejorar el campo "Archivo PDF" del meta box con selector visual
       (wp.media) — hecho en v0.2.0 (27/08/2026), ver §11.
-- [ ] Crear la plantilla single-libro (página individual de cada libro)
-      que incluya el shortcode/markup de DearFlip apuntando a `/leer/{id}/`.
-- [ ] Conectar los chips de categoría del diseño real (Catálogo) con
-      `data-mgp-categoria="<slug>"` para que `mgp-catalogo.js` los detecte.
-- [ ] Cargar libros de prueba (los 6 que aparecen hardcodeados en el
-      diseño: "Aprendiendo React", "Git y GitHub desde cero", etc.) como
-      posts reales del CPT para probar el flujo end-to-end.
+- [x] Crear la plantilla single-libro (página individual de cada libro)
+      con el markup de DearFlip — hecho en v0.3.0 (27/08/2026), ver §12.
+- [x] Conectar los chips de categoría del diseño real (Catálogo) con
+      `data-mgp-categoria="<slug>"` — hecho en v0.4.1/v0.4.2
+      (28/08/2026), ver §14-15.
 - [ ] Decidir e implementar login por código de estudiante (Members o
       usuarios nativos con el código como parte del username/meta).
+- [ ] Espacio en blanco debajo del pie de página en Inicio — reportado
+      por el usuario, baja prioridad, pospuesto hasta que el sitio esté
+      100% funcional (ver §21).
 - [x] Configurar Git remoto (GitHub/GitLab) y hacer el primer push —
       hecho el 03/09/2026, ver §2.9. Remoto:
       `https://github.com/JhonatanAndree/bibliotecamgp.git`.
@@ -1295,4 +1309,177 @@ reemplazo de cadena exacta, `substr_count()` confirmó 1 coincidencia,
   (`shortcode_guardados()` filtra libros con progreso 1-99%)
 - `mgp-biblioteca-core.php` (versión 0.5.9)
 - `readme.txt` (changelog)
+
+## 26. Mismo duplicado, ahora en Inicio: "Sigue leyendo" vs "Recomendados para ti" (v0.5.10, 03/09/2026)
+
+**Reportado por el usuario** viendo Inicio con un solo libro real
+(Python en una semana, ya en progreso tras §23/§24): el libro aparecía
+dos veces — una en "Sigue leyendo" ([mgp_sigue_leyendo], progreso
+1-99%), otra en "Recomendados para ti" ([mgp_recomendados], los 4
+últimos libros publicados). Mismo tipo de problema que §25 (Mis
+libros), pero en una página distinta con shortcodes independientes. El
+usuario pidió revisar la lógica, simplificar, y — pedido nuevo para
+todo el proyecto de aquí en adelante — aplicar criterio de UX/UI para
+que la navegación sea intuitiva en todo el sitio (agregado como
+principio permanente en §1).
+
+**Causa**: `shortcode_recomendados()` no sabía nada del progreso de
+lectura del usuario — solo consultaba los últimos 4 libros publicados,
+sin excluir los que ya estuvieran en "Sigue leyendo". Con un catálogo
+chico (hoy 1 solo libro) la superposición es inevitable; seguirá
+pasando con catálogos más grandes cada vez que alguien empiece a leer
+algo recién publicado.
+
+**Fix**: se extrajo la lógica de "libros en progreso 1-99%" (antes
+inline dentro de `shortcode_sigue_leyendo()`) a un método privado
+compartido, `obtener_libros_en_progreso( $usuario_id )`, usado ahora
+por ambos shortcodes. `shortcode_recomendados()` pasa los IDs
+resultantes a `WP_Query` vía `post__not_in`, así un libro en progreso
+nunca aparece en Recomendados. Sin cambios visuales ni de Elementor —
+mismo patrón que §25, aplicado un nivel más arriba (WP_Query en vez de
+array_filter porque acá la fuente es una consulta, no una lista de IDs
+guardada en user meta).
+
+**Despliegue**: archivo completo redeployado en vivo vía
+`novamira/execute-php` (decodificación base64 + `file_put_contents`,
+verificado byte a byte — 13076 bytes igual en servidor y local — y
+`php -l` limpio), luego sincronizado al repo local.
+
+**Archivos modificados en v0.5.10**:
+- `includes/inicio/class-mgp-inicio.php` (nuevo método
+  `obtener_libros_en_progreso()`, reutilizado por
+  `shortcode_sigue_leyendo()` y `shortcode_recomendados()`, que ahora
+  excluye esos libros vía `post__not_in`)
+- `mgp-biblioteca-core.php` (versión 0.5.10)
+- `readme.txt` (changelog)
+
+## 27. Texto ilegible: barra de progreso y título/subtítulo sin CSS de respaldo (v0.5.11, 03/09/2026)
+
+**Preguntó el usuario sobre el orden de las secciones de Inicio** (Saludo
+→ Categorías → Sigue leyendo → Recomendados — eso lo decide dónde se
+colocan los widgets Shortcode en Elementor, no el código; el orden
+actual ya coincidía con lo que tenía en mente, no requirió cambio) **y
+pidió, para todo el proyecto**, que el texto del plugin sea blanco por
+legibilidad — agregado como principio permanente en §1.
+
+**Causa real, verificada contra el CSS generado por Elementor**
+(`wp-content/uploads/elementor/css/post-8.css`, tokens `:root`): el
+sistema de diseño SÍ define `--mgp-ink:#f2f4f8` (casi blanco) para texto
+principal, pero `.mgp-progress-label`, `.mgp-progress-track`,
+`.mgp-progress-fill`, `.mgp-page-title` y `.mgp-page-sub` **nunca
+tuvieron ninguna regla CSS**, ni en Elementor ni en el CSS de respaldo
+del plugin (`assets/css/mgp-biblioteca.css`, creado en v0.5.6 — §22) —
+mismo hueco de siempre (clases impresas por PHP, invisibles para el
+generador de CSS "atómico" de Elementor), simplemente nadie lo había
+notado porque hasta v0.5.7 ningún libro tenía progreso real que mostrar
+la barra, y el saludo/mensajes de estado vacío llevaban meses sin
+llamar la atención sobre su contraste.
+
+**Fix**: agregadas las reglas faltantes en `mgp-biblioteca.css`, usando
+los mismos tokens `--mgp-*` ya establecidos — `.mgp-progress-label`,
+`.mgp-page-title` y `.mgp-page-sub` en `var(--mgp-ink)` (blanco real),
+`.mgp-progress-track`/`.mgp-progress-fill` con un track/fill visual
+(antes la barra ni siquiera se dibujaba, solo el texto). Alcance
+acordado con el usuario vía pregunta directa: solo lo que era realmente
+ilegible (progreso + mensajes de estado), no todo el texto del plugin —
+el resto (autor, contador de categoría, botón Guardar) ya usa
+`--mgp-ink-muted`/`--mgp-ink-faint` a propósito, como jerarquía visual
+secundaria, y se queda igual.
+
+**Despliegue**: archivo completo redeployado en vivo vía
+`novamira/execute-php` (base64 + `file_put_contents`, verificado byte a
+byte — 6887 bytes igual en servidor y local), luego sincronizado al
+repo local. Como el CSS se enqueue con `MGP_BIB_VERSION` como query
+string de caché, el bump de versión ya fuerza la recarga sin pasos
+extra.
+
+**Archivos modificados en v0.5.11**:
+- `assets/css/mgp-biblioteca.css` (reglas nuevas: `.mgp-progress`,
+  `.mgp-progress-track`, `.mgp-progress-fill`, `.mgp-progress-label`,
+  `.mgp-page-title`, `.mgp-page-sub`)
+- `mgp-biblioteca-core.php` (versión 0.5.11)
+- `readme.txt` (changelog)
+
+## §28 — "Mis libros" rediseñado con pestañas: botón Guardar SÍ funcionaba, el problema era UX (v0.5.12, 03/09/2026)
+
+**Reporte del usuario**: "revisa el botón de guardar, le di clic y no
+aparece en mis libros o no se por donde debe aparecer".
+
+**Investigación (no encontró bug)**: se verificó paso a paso vía
+preguntas directas al usuario + consultas a la base de datos:
+- ¿En qué página hizo clic? → Catálogo, Inicio o Mis libros (confirmado
+  por el usuario, sin precisar cuál exactamente).
+- ¿El botón cambió a "Guardado" visualmente al hacer clic? → El usuario
+  confirmó que sí cambió.
+- Consulta directa a `mgp_libros_guardados` (user meta) confirmó que el
+  ID del libro sí se guardó correctamente en la base de datos.
+- `do_shortcode('[mgp_en_progreso]')` confirmó que la tarjeta del libro
+  ya mostraba clase `mgp-btn-saved` y texto "Guardado" — el botón SÍ
+  reflejaba el estado guardado.
+
+Conclusión: el guardado funcionaba al 100%. El libro vivía en "En
+progreso" (tiene progreso 1-99%, así que por la regla de deduplicación
+de §25 NO aparece en "Guardados" — vive solo en una sección a la vez).
+El usuario esperaba verlo específicamente bajo "Guardados" y no sabía
+que la exclusión era intencional — no era un bug de código, sino que la
+página no comunicaba bien dónde vive cada libro.
+
+**Pedido del usuario, ya con el diagnóstico claro**: "sería bueno que
+aparezcan Guardados en la página Mis libros, pero déjalos en una
+pestaña mejor, así cuando necesitemos ver los libros guardados al hacer
+clic se abre un modal o algo que sea responsivo para mostrarlos (un
+botón por ejemplo), pero recuerda que debemos ser UX o UI. La idea no
+es complicar al estudiante, es hacerle más fácil la lectura de un
+libro." — pide explícitamente un rediseño con pestañas en vez de dos
+secciones apiladas, reforzando el principio de UX/UI de §1.
+
+**Fix — nuevo shortcode `[mgp_mis_libros]`** (`class-mgp-mis-libros.php`):
+envuelve `shortcode_en_progreso()` y `shortcode_guardados()` (ambos sin
+cambios internos) en un contenedor con pestañas: "En progreso" es la
+pestaña activa por defecto (es lo que el estudiante más necesita —
+seguir leyendo), "Guardados" queda en una segunda pestaña a un clic de
+distancia. Sin modal (se descartó — una pestaña simple es más liviana y
+más accesible que un modal, sin sacrificar nada de UX) y responsivo
+(las pestañas se estiran a ancho completo en móvil vía media query).
+
+**CSS nuevo** (`mgp-biblioteca.css`): `.mgp-tabs-nav`, `.mgp-tab-btn`,
+`.mgp-tab-btn-active` — mismo patrón de tokens `--mgp-*` que el resto
+del archivo (ver §22), con regla `max-width:767px` para apilar a ancho
+completo en móvil.
+
+**JS nuevo** (`mgp-catalogo.js`): listener delegado en `document` sobre
+`.mgp-tab-btn` (mismo patrón que el botón Guardar) — al hacer clic,
+alterna clase `mgp-tab-btn-active`/`aria-selected` en los botones y
+`hidden` en los paneles vía atributos `data-mgp-tabs`/`data-mgp-tab`/
+`data-mgp-panel`. Sin dependencias, funciona en cualquier página que
+use `[mgp_mis_libros]`.
+
+**Página Elementor "Mis libros" (post 100) actualizada en vivo**: se
+editó `_elementor_data` directamente (mismo patrón de §24 — leer JSON,
+modificar árbol, `wp_slash()` + `update_post_meta()` + limpiar caché de
+Elementor) para:
+- Reemplazar los 3 widgets viejos (`459f33a` = `[mgp_guardados]`,
+  `70139d2` = encabezado "En progreso", `26d2449` = `[mgp_en_progreso]`)
+  por un único widget shortcode nuevo con `[mgp_mis_libros]`.
+- Actualizar el título de la página de "Mis libros guardados" a "Mis
+  libros" (ya no es solo la sección de guardados).
+- Actualizar el subtítulo de "Los libros que guardaste para leer
+  después." a "Tu progreso de lectura y los libros que guardaste."
+  (refleja que la página ahora cubre ambos estados).
+
+Verificado con `do_shortcode('[mgp_mis_libros]')`: renderiza el HTML de
+pestañas correctamente con la tarjeta del libro real dentro del panel
+"En progreso".
+
+**Archivos modificados en v0.5.12**:
+- `includes/mis-libros/class-mgp-mis-libros.php` (nuevo shortcode
+  `[mgp_mis_libros]` + registro del hook)
+- `assets/css/mgp-biblioteca.css` (reglas `.mgp-tabs-nav`, `.mgp-tab-btn`,
+  `.mgp-tab-btn-active`)
+- `assets/js/mgp-catalogo.js` (listener de toggle de pestañas)
+- `mgp-biblioteca-core.php` (versión 0.5.12)
+- `readme.txt` (changelog)
+- Página Elementor "Mis libros" (post 100) — `_elementor_data` editado
+  directamente en la base de datos (no requiere acción manual del
+  usuario en el editor de Elementor).
 

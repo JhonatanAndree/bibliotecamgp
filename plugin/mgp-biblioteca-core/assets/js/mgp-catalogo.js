@@ -68,6 +68,30 @@
 				} );
 		}
 
+		// --- Pestañas de "Mis libros" (ver MEMORIA.md §28) -------------------
+		// Delegado en document, igual que "Guardar": funciona sin importar
+		// en qué página esté el marcado de [mgp_mis_libros].
+		document.addEventListener( 'click', function ( evento ) {
+			var boton = evento.target.closest( '.mgp-tab-btn' );
+			if ( ! boton ) {
+				return;
+			}
+			var contenedorTabs = boton.closest( '[data-mgp-tabs]' );
+			if ( ! contenedorTabs ) {
+				return;
+			}
+			var destino = boton.getAttribute( 'data-mgp-tab' );
+
+			contenedorTabs.querySelectorAll( '.mgp-tab-btn' ).forEach( function ( btn ) {
+				var activo = btn === boton;
+				btn.classList.toggle( 'mgp-tab-btn-active', activo );
+				btn.setAttribute( 'aria-selected', activo ? 'true' : 'false' );
+			} );
+			contenedorTabs.querySelectorAll( '[data-mgp-panel]' ).forEach( function ( panel ) {
+				panel.hidden = panel.getAttribute( 'data-mgp-panel' ) !== destino;
+			} );
+		} );
+
 		// --- Catálogo: filtros por categoría + buscador ---------------------
 		if ( 'catalogo' !== mgpBiblioteca.pagina ) {
 			return;

@@ -35,6 +35,47 @@ class MGP_Mis_Libros {
 	public function registrar_hooks(): void {
 		add_shortcode( 'mgp_guardados', array( $this, 'shortcode_guardados' ) );
 		add_shortcode( 'mgp_en_progreso', array( $this, 'shortcode_en_progreso' ) );
+		add_shortcode( 'mgp_mis_libros', array( $this, 'shortcode_mis_libros' ) );
+	}
+
+	/**
+	 * [mgp_mis_libros] — vista con pestañas de "Mis libros" (ver MEMORIA.md
+	 * §28, pedido directo del usuario). Antes "Guardados" y "En progreso"
+	 * eran dos secciones apiladas en la misma página: con el filtro de
+	 * duplicados de §25/§26, un libro guardado y ya empezado solo vivía en
+	 * "En progreso", lo que confundía — el usuario le daba a "Guardar" y
+	 * no lo veía en "Guardados". La solución no es volver al duplicado,
+	 * es hacer que la persona no tenga que buscarlo: "En progreso" es la
+	 * pestaña activa por defecto (lo más útil para retomar la lectura,
+	 * principio de UX/UI de §1) y "Guardados" está a un clic, sin
+	 * recargar la página. Reutiliza shortcode_en_progreso()/
+	 * shortcode_guardados() tal cual — solo cambia el envoltorio visual.
+	 */
+	public function shortcode_mis_libros(): string {
+		if ( ! is_user_logged_in() ) {
+			return '';
+		}
+
+		ob_start();
+		?>
+		<div class="mgp-tabs" data-mgp-tabs>
+			<div class="mgp-tabs-nav" role="tablist">
+				<button type="button" class="mgp-tab-btn mgp-tab-btn-active" data-mgp-tab="progreso" role="tab" aria-selected="true">
+					<?php esc_html_e( 'En progreso', 'mgp-biblioteca' ); ?>
+				</button>
+				<button type="button" class="mgp-tab-btn" data-mgp-tab="guardados" role="tab" aria-selected="false">
+					<?php esc_html_e( 'Guardados', 'mgp-biblioteca' ); ?>
+				</button>
+			</div>
+			<div class="mgp-tab-panel" data-mgp-panel="progreso">
+				<?php echo $this->shortcode_en_progreso(); // phpcs:ignore -- ya escapa cada campo internamente. ?>
+			</div>
+			<div class="mgp-tab-panel" data-mgp-panel="guardados" hidden>
+				<?php echo $this->shortcode_guardados(); // phpcs:ignore -- ya escapa cada campo internamente. ?>
+			</div>
+		</div>
+		<?php
+		return (string) ob_get_clean();
 	}
 
 	public function shortcode_guardados(): string {

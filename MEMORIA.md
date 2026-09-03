@@ -43,9 +43,18 @@
 8. Se conectó la carpeta local del usuario para versionar en Git:
    `D:\OneDrive\01 Trabajos\MGP\2026\Biblioteca` (accesible en esta sesión
    como `~/mnt/Biblioteca`). Repo Git inicializado ahí, rama `main`.
-   **Pendiente:** el usuario debe configurar su identidad de Git
-   (`git config user.name` / `user.email`) y el remoto (GitHub/GitLab)
-   antes de poder hacer push — no se asumió ninguna identidad por él.
+   Identidad de Git configurada (`TI MGP <ti@mgp.edu.pe>`) y los 16
+   commits locales (v0.1.0 a v0.5.5) ya estaban hechos.
+9. (03/09/2026) **Remoto configurado y primer push hecho**: se conectó
+   `origin` a `https://github.com/JhonatanAndree/bibliotecamgp.git`. El
+   repo en GitHub ya traía un `LICENSE` inicial (creado al armar el repo
+   ahí) — se fusionó con `git merge origin/main --allow-unrelated-histories`
+   y se hizo `git push -u origin main` sin conflictos. **Ya no está
+   pendiente configurar el remoto ni el push inicial** (ver nota antigua
+   más arriba, quedó resuelta). Nota técnica: la carpeta vive en OneDrive
+   y Git marcó "dubious ownership" la primera vez — se resolvió con
+   `git config --global --add safe.directory 'D:/OneDrive/01 Trabajos/MGP/2026/Biblioteca'`,
+   ya no debería volver a pasar en esta máquina.
 
 ## 3. Estructura del sitio real (Elementor, sin datos conectados)
 
@@ -150,9 +159,15 @@ gestionar libros sin necesitar cuenta de Administrador completo.
       posts reales del CPT para probar el flujo end-to-end.
 - [ ] Decidir e implementar login por código de estudiante (Members o
       usuarios nativos con el código como parte del username/meta).
-- [ ] Configurar Git remoto (GitHub/GitLab) del instituto y hacer el
-      primer push — pendiente de que el usuario configure su identidad
-      Git local y el repo remoto.
+- [x] Configurar Git remoto (GitHub/GitLab) y hacer el primer push —
+      hecho el 03/09/2026, ver §2.9. Remoto:
+      `https://github.com/JhonatanAndree/bibliotecamgp.git`.
+- [ ] **Pendiente más importante detectado en §18**: el progreso de
+      lectura real nunca se registra — falta el enganche entre los
+      eventos de cambio de página del lector DearFlip Lite y el
+      endpoint AJAX `MGP_Usuario::actualizar_progreso()` (existe desde
+      v0.1.0 pero nadie lo llama). No se implementó a ciegas porque
+      falta verificar primero la API real de eventos de DearFlip Lite.
 
 ## 7. Cómo desplegar el plugin al sitio en vivo
 

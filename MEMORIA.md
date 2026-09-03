@@ -171,12 +171,10 @@ gestionar libros sin necesitar cuenta de Administrador completo.
       vez de a la página del libro, así que el lector DearFlip (y su
       enganche de progreso) nunca se alcanzaba en la práctica — hecho en
       v0.5.8 (§24).
-- [ ] Falta verificación en vivo end-to-end: pasar páginas de un libro
-      real y confirmar que el progreso se guarda y se refleja en
-      "Mis libros → En progreso" (§24).
-- [ ] Confirmar con el usuario si el panel "Vista previa del lector"
-      (datos de muestra fijos, visible en Mis libros) debe eliminarse en
-      Elementor (§24).
+- [x] Verificación en vivo end-to-end: confirmado por el usuario —
+      progreso real "14%" reflejado en Mis libros (§24).
+- [x] Panel "Vista previa del lector" (datos de muestra fijos) eliminado
+      de la página Mis libros en Elementor (§24).
 
 ## 7. Cómo desplegar el plugin al sitio en vivo
 
@@ -1181,13 +1179,13 @@ en la página individual del libro, y lo localiza con `mgpLector`
 esta página no tenía NINGÚN objeto JS localizado del plugin, así que el
 progreso no podía reportarse aunque hubiera existido el enganche.
 
-**Pendiente de verificación en vivo**: falta confirmar con un libro real
-que, al pasar páginas en el lector, `mgp_progreso_libro_{id}` se
-actualiza en la base de datos y que `[mgp_en_progreso]`/`[mgp_sigue_leyendo]`
-reflejan el avance real. No se hizo esa prueba en esta sesión porque
-requiere interactuar con el lector visualmente (pasar páginas de un PDF
-real), no solo revisar código — recomendado como primer paso de la
-próxima sesión.
+**Verificado en vivo el 03/09/2026** (tras el fix de routing de §24): el
+usuario abrió el libro real desde "Leer", el lector DearFlip cargó
+correctamente en `/libro/python-en-una-semana/`, y en "Mis libros" tanto
+"Guardados" como "En progreso" muestran "Vas por el 14%" — confirma que
+`mgp_progreso_libro_{id}` se actualiza de verdad y que
+`[mgp_en_progreso]` refleja el avance real. Enganche funcionando
+end-to-end.
 
 **Archivos modificados en v0.5.7**:
 - `assets/js/mgp-lector.js` (reescrito completo: enganche real de
@@ -1236,18 +1234,21 @@ Verificado en el servidor con `wp_remote_get()` autenticado con cookie
 de sesión real: el href de "Leer" en Mis libros ahora resuelve a
 `https://biblioteca.mgp.edu.pe/libro/python-en-una-semana/`.
 
-**Pendiente de verificación en vivo** (mismo pendiente que quedó abierto
-en §23, ahora sí alcanzable): abrir un libro real desde "Leer", pasar
-páginas en el lector DearFlip y confirmar que `mgp_progreso_libro_{id}`
-se actualiza y que "Mis libros → En progreso" refleja el avance.
+**Verificado en vivo**: confirmado por el usuario — ver §23 (progreso
+real "14%" reflejado en Mis libros tras el fix).
 
-**Nota aparte, sin resolver todavía**: en la captura de Mis libros del
-usuario también se ve un panel "Vista previa del lector" con datos de
-muestra fijos ("Aprendiendo React · página 72 de 180") debajo de la
-sección de libros guardados — parece contenido de muestra de Elementor
-igual al de los 3 libros ficticios ya corregidos en §17, pero es un
-elemento aparte que el usuario todavía no pidió quitar explícitamente.
-Queda pendiente confirmar con el usuario si debe eliminarse.
+**Panel mockup "Vista previa del lector" eliminado**: el usuario
+confirmó quitarlo. Era un elemento Elementor fijo (`e-flexbox` con clase
+`g-mgp-panel`, id `159a883`) en `_elementor_data` de la página "Mis
+libros" (post ID 100), con datos de muestra hardcodeados ("Aprendiendo
+React · página 72 de 180") — mismo tipo de contenido de muestra ya
+corregido en §17, pero un elemento aparte no detectado entonces.
+Eliminado directamente del JSON de `_elementor_data` vía
+`novamira/execute-php` (localizado por id, removido del árbol de
+elementos, meta reescrita con `update_post_meta` + `wp_slash`, caché de
+Elementor limpiada con `files_manager->clear_cache()`). Verificado:
+`_elementor_data` ya no contiene el texto "Vista previa del lector";
+confirmado visualmente por el usuario que el panel ya no aparece.
 
 **Archivos modificados en v0.5.8**:
 - `includes/catalogo/template-tarjeta-libro.php` (href del botón Leer)
@@ -1255,5 +1256,43 @@ Queda pendiente confirmar con el usuario si debe eliminarse.
   ocurrencias: sigue-leyendo y recomendados)
 - `includes/mis-libros/class-mgp-mis-libros.php` (href del botón Leer)
 - `mgp-biblioteca-core.php` (versión 0.5.8)
+- `readme.txt` (changelog)
+
+## 25. Libro duplicado en "Mis libros" cuando está guardado Y en progreso (v0.5.9, 03/09/2026)
+
+**Reportado por el usuario** tras verificar en vivo el fix de §24: con un
+solo libro (guardado, y ya con progreso real gracias a §23/§24), el
+mismo libro aparecía dos veces en "Mis libros" — una vez en "Guardados",
+otra en "En progreso". Preguntó si esto se repetiría con más libros
+(sí, siempre que un libro esté guardado Y tenga progreso 1-99%) y pidió
+una propuesta para simplificar la página y evitar duplicados.
+
+**Propuesta hecha al usuario** (3 opciones vía pregunta directa):
+1. Redefinir "Guardados" = guardado pero sin empezar (excluye los que ya
+   tienen progreso 1-99%, que viven solo en "En progreso") — cambio
+   mínimo, sin tocar Elementor.
+2. Lo mismo, más una tercera sección "Terminados" (100%).
+3. Unificar todo en una sola lista con barra de progreso + etiqueta
+   "Guardado" cuando aplique — cambio de diseño más grande.
+
+**Elegida**: opción 1. `MGP_Mis_Libros::shortcode_guardados()`
+(`includes/mis-libros/class-mgp-mis-libros.php`) ahora filtra la lista
+de `mgp_libros_guardados` con `array_filter()`: solo pasan los libros
+cuyo `obtener_porcentaje()` es `null` (sin progreso) o `100` (terminado,
+a propósito — no hay sección "Terminados" todavía). Un libro con
+progreso 1-99% queda excluido de "Guardados" y aparece únicamente en
+"En progreso" (`shortcode_en_progreso()`, sin cambios — ya filtraba por
+1-99% desde su creación en §18). Cero cambios visuales/Elementor, cero
+cambios en el guardado/progreso en sí — solo en qué lista se imprime
+cada libro.
+
+**Despliegue**: aplicado primero en vivo vía Novamira (`execute-php` +
+reemplazo de cadena exacta, `substr_count()` confirmó 1 coincidencia,
+`php -l` limpio), luego sincronizado al repo local.
+
+**Archivos modificados en v0.5.9**:
+- `includes/mis-libros/class-mgp-mis-libros.php`
+  (`shortcode_guardados()` filtra libros con progreso 1-99%)
+- `mgp-biblioteca-core.php` (versión 0.5.9)
 - `readme.txt` (changelog)
 

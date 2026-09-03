@@ -46,6 +46,16 @@ class MGP_Mis_Libros {
 		$guardados  = (array) get_user_meta( $usuario_id, 'mgp_libros_guardados', true );
 		$guardados  = array_filter( array_map( 'absint', $guardados ) );
 
+		// "Guardados" muestra solo lo que todavía no se empezó a leer (ver
+		// MEMORIA.md §25): un libro con progreso 1-99% vive únicamente en
+		// "En progreso", así no aparece duplicado en las dos secciones.
+		// El progreso 100% (terminado) sigue apareciendo aquí a propósito,
+		// no hay sección "Terminados" todavía.
+		$guardados = array_filter( $guardados, function ( $libro_id ) use ( $usuario_id ) {
+			$porcentaje = $this->obtener_porcentaje( $usuario_id, $libro_id );
+			return null === $porcentaje || 100 === $porcentaje;
+		} );
+
 		if ( empty( $guardados ) ) {
 			return '<p class="mgp-page-sub">'
 				. esc_html__( 'Todavía no has guardado ningún libro. ', 'mgp-biblioteca' )

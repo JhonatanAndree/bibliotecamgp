@@ -3,7 +3,7 @@ Contributors: ti-mgp
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 8.0
-Stable tag: 0.5.8
+Stable tag: 0.5.9
 License: GPLv2 or later
 
 Motor de datos de la biblioteca virtual del IESTP Manuel Gonzales Prada.
@@ -13,6 +13,13 @@ en biblioteca.mgp.edu.pe. Depende de DearFlip Lite (lector) y de Members
 (el plugin verifica su presencia antes de usarlos).
 
 == Registro de cambios ==
+
+= 0.5.9 =
+* Fix: en "Mis libros", un libro guardado Y en progreso aparecía duplicado
+  (una vez en "Guardados", otra en "En progreso"). [mgp_guardados] ahora
+  excluye los libros con progreso 1-99%; esos viven solo en "En progreso".
+  Los terminados (100%) siguen en Guardados (no hay sección Terminados
+  todavía). Ver MEMORIA.md §25.
 
 = 0.5.8 =
 * Fix crítico: el botón "Leer" en TODAS las tarjetas del sitio (catálogo,
